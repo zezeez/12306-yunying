@@ -26,7 +26,7 @@ public:
     QString getNextCdn();
     QString getCurCdn();
     QString getRandomCdn();
-    void socketStateChanged();
+    void socketStateChanged(QAbstractSocket::SocketState state);
     void socketEncrypted();
     void socketError();
     void sslError();

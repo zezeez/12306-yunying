@@ -604,8 +604,17 @@ void SettingDialog::candidateSetting(QTabWidget *tab)
         QSettings setting;
         setting.setValue(_("candidate_setting/prio_candidate"), checked);
     });
-    checked = setting.value(_("candidate_setting/prio_candidate"), false).value<bool>();
-    prioCandidateCB->setChecked(checked);
+    checked = setting.value(_("candidate_setting/only_candidate"), false).value<bool>();
+    onlyCandidateCB->setChecked(checked);
+    QCheckBox *forceCandidateCB = new QCheckBox(tr("强制候补"));
+    connect(forceCandidateCB, &QCheckBox::toggled, this, [] (bool checked) {
+        UserData::instance()->candidateSetting.forceCandidate = checked;
+        QSettings setting;
+        setting.setValue(_("candidate_setting/force_candidate"), checked);
+    });
+    checked = setting.value(_("candidate_setting/force_candidate"), false).value<bool>();
+    forceCandidateCB->setChecked(checked);
+    forceCandidateCB->setToolTip(tr("即使有票也强制提交候补，可能导致订单失败，谨慎使用"));
     QCheckBox *noSeatCB = new QCheckBox(tr("接受无座"));
     connect(noSeatCB, &QCheckBox::toggled, this, [] (bool checked) {
         UserData::instance()->candidateSetting.acceptNoSeat = checked;
@@ -720,6 +729,7 @@ void SettingDialog::candidateSetting(QTabWidget *tab)
         UserData::instance()->candidateSetting.isCandidate = checked;
         onlyCandidateCB->setEnabled(checked);
         prioCandidateCB->setEnabled(checked);
+        forceCandidateCB->setEnabled(checked);
         noSeatCB->setEnabled(checked);
         acceptNewTrainCB->setEnabled(checked);
         sbox1->setEnabled(checked && acceptNewTrainCB->isChecked());
@@ -735,6 +745,7 @@ void SettingDialog::candidateSetting(QTabWidget *tab)
     candidateCB->setChecked(candidateChecked);
     onlyCandidateCB->setEnabled(candidateChecked);
     prioCandidateCB->setEnabled(candidateChecked);
+    forceCandidateCB->setEnabled(candidateChecked);
     noSeatCB->setEnabled(candidateChecked);
     acceptNewTrainCB->setEnabled(candidateChecked);
     checked = setting.value(_("candidate_setting/accept_new_train"), false).value<bool>();
@@ -761,6 +772,7 @@ void SettingDialog::candidateSetting(QTabWidget *tab)
     vlayout->addWidget(candidateCB);
     vlayout->addWidget(onlyCandidateCB);
     vlayout->addWidget(prioCandidateCB);
+    vlayout->addWidget(forceCandidateCB);
     vlayout->addWidget(noSeatCB);
     vlayout->addWidget(acceptNewTrainCB);
     QHBoxLayout *hlayout2 = new QHBoxLayout;

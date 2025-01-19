@@ -752,8 +752,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                 can_booking++;
             }
         }
-        if ((trainInfo[ECONTROLLEDTRAINFLAG] == _("1") || trainInfo[ECONTROLLEDTRAINFLAG] == _("2")) ||
-            (trainInfo[ESECRETSTR].isEmpty() && trainInfo[ECANWEBBUY] == _("IS_TIME_NOT_BUY"))) {
+        if ((trainInfo[ECONTROLLEDTRAINFLAG] == _("1") || trainInfo[ECONTROLLEDTRAINFLAG] == _("2"))) {
             invalidTrain.push_back(trainInfo);
             //useTrainListSize--;
             continue;

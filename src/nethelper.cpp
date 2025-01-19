@@ -192,7 +192,7 @@ void NetHelper::post(const QUrl &url, ReqParam &param, NetHelper::replyCallBack 
         QString mainCdn = cdn.getMainCdn();
         if (!mainCdn.isEmpty()) {
             request.setIpAddress(mainCdn);
-            qDebug() << "main cdn: " << mainCdn;
+            //qDebug() << "main cdn: " << mainCdn;
         }
     }
 
@@ -243,7 +243,7 @@ void NetHelper::get(const QUrl &url, replyCallBack rcb, QList<std::pair<QString,
         }
     }
     request.setPeerVerifyName(url.host());
-    qDebug() << request.ipAddress();
+    //qDebug() << request.ipAddress();
 #endif
     setHeader(url, request);
     QList<std::pair<QString, QString>>::const_iterator it;
@@ -283,7 +283,7 @@ void NetHelper::get2(const QUrl &url, replyCallBack rcb, QList<std::pair<QString
         reqCount = 0;
     }
     request.setPeerVerifyName(url.host());
-    qDebug() << request.ipAddress();
+    //qDebug() << request.ipAddress();
 #endif
     setHeader2(url, request);
     QList<std::pair<QString, QString>>::const_iterator it;

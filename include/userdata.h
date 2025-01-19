@@ -263,6 +263,7 @@ struct CandidateSetting {
     bool isCandidate;
     bool prioCandidate;
     bool onlyCandidate;
+    bool forceCandidate;
     bool acceptNoSeat;
     bool acceptNewTrain;
     bool extraCandidateDateEn;

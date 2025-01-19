@@ -729,7 +729,7 @@ bool Analysis::mayCandidate(const QVariantMap &stationMap, const QString &date)
                 selectSeatType[j] == 6) {
                 continue;
             }
-            if (trainTicketInfo[i][selectSeatType[j]] == 0) {
+            if (trainTicketInfo[i][selectSeatType[j]] == 0 || ud->candidateSetting.forceCandidate) {
                 QChar code = seatTypeDescTransToSubmitCode(selectedSeatTypeList[j]);
                 if (code != '0') {
                     if (trainList[ECANDIDATESEATLIMIT].contains(code)) {
