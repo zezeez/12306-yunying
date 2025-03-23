@@ -453,7 +453,6 @@ void MainWindow::uamLogined()
 {
     statusBar()->showMessage(QStringLiteral("当前状态：已登陆"));
     showMainWindow();
-    syncTime();
     updateLoginButtonStatus(true);
 }
 
@@ -904,12 +903,19 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
             button = new QPushButton;
             connect(button, &QPushButton::clicked, this, &MainWindow::addTrainToSelected);
         }
-        curText = trainInfo[ETEXTINFO] == _("预订") ? tr("添加") : trainInfo[ETEXTINFO];
-        if (curText.contains(_("<br/>"))) {
-            curText.remove(_("<br/>"));
-        }
-        if (curText.length() > 4) {
-            button->setToolTip(curText);
+        curText = trainInfo[ETEXTINFO];
+        if (curText == _("预订")) {
+            curText = tr("添加");
+        } else {
+            if (curText.endsWith(_("<br/>"))) {
+                curText.remove(_("<br/>"));
+            }
+            if (curText.endsWith(_("起售"))) {
+                curText.remove(_("起售"));
+            }
+            if (curText.length() > 4) {
+                button->setToolTip(curText);
+            }
         }
         button->setText(curText);
         if (ud->runStatus != EIDLE) {
@@ -1656,6 +1662,14 @@ void MainWindow::setMusicPath(const QString &path)
 void MainWindow::updateAvaliableCdnNum(int num)
 {
     cdnIndicatorLabel->setText(_("CDN: %1 ").arg(num));
+}
+
+void MainWindow::getCdn()
+{
+    UserData *ud = UserData::instance();
+    if (ud->generalSetting.cdnEnable) {
+        NetHelper::instance()->getCdn();
+    }
 }
 #endif
 

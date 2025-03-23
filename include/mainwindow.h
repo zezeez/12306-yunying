@@ -107,6 +107,7 @@ public:
     void updateLatencyChart(int d);
 #ifdef HAS_CDN
     void updateAvaliableCdnNum(int num);
+    void getCdn();
 #endif
     // update
     void checkUpdateReply(const QVariantMap &varMap);

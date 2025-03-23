@@ -55,6 +55,10 @@ int main(int argc, char *argv[])
     nh->checkUpdate();
     nh->leftTicketInit();
     //w->loginDialog->show();
+#ifdef HAS_CDN
+    w->getCdn();
+#endif
+    w->syncTime();
     w->show();
 
     return a.exec();

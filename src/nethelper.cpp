@@ -783,12 +783,6 @@ void NetHelper::loginSuccess()
     getPassengerInfo();
     getMyPublicIp();
     leftTicketInit();
-#ifdef HAS_CDN
-    UserData *ud = UserData::instance();
-    if (ud->generalSetting.cdnEnable && cdn.isEmpty()) {
-        NetHelper::instance()->getCdn();
-    }
-#endif
 }
 
 void NetHelper::logout()
