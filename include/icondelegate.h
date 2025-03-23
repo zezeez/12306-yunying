@@ -38,7 +38,7 @@ public:
         QString text;
         QRect rect;
         QPen pen(QColor(99, 184, 255), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-        QFont font(_("Times"), QFont::Black);
+        QFont font(_("宋体"), QFont::Black);
 
         if (option.state & QStyle::State_Selected) {
             pen.setColor(Qt::white);
@@ -52,20 +52,20 @@ public:
             painter->save();
             painter->setRenderHint(QPainter::Antialiasing);  //抗锯齿
             painter->setRenderHints(QPainter::SmoothPixmapTransform);  //平滑像素图变换
+            rect.setWidth(16);
+            rect.setHeight(16);
             if (isStart) {
-                rect.setWidth(start.width());
-                rect.setHeight(start.height());
+                start.scaled(16, 16);
                 painter->drawPixmap(rect, start);
             } else {
-                rect.setWidth(pass.width());
-                rect.setHeight(pass.height());
+                pass.scaled(16, 16);
                 painter->drawPixmap(rect, pass);
             }
             painter->setPen(pen);
             font.setPointSize(10);
             font.setBold(true);
             painter->setFont(font);
-            width = option.rect.width() - start.width();
+            width = option.rect.width() - 16;
             textWidth = text.size() << 4;
             while (!text.isEmpty() && width < textWidth) {
                 text.truncate(text.size() - 1);
@@ -88,20 +88,20 @@ public:
             painter->save();
             painter->setRenderHint(QPainter::Antialiasing);  //抗锯齿
             painter->setRenderHints(QPainter::SmoothPixmapTransform);  //平滑像素图变换
+            rect.setWidth(16);
+            rect.setHeight(16);
             if (isEnd) {
-                rect.setWidth(end.width());
-                rect.setHeight(end.height());
+                end.scaled(16, 16);
                 painter->drawPixmap(rect, end);
             } else {
-                rect.setWidth(pass.width());
-                rect.setHeight(pass.height());
+                pass.scaled(16, 16);
                 painter->drawPixmap(rect, pass);
             }
             painter->setPen(pen);
             font.setPointSize(10);
             font.setBold(true);
             painter->setFont(font);
-            width = option.rect.width() - start.width();
+            width = option.rect.width() - 16;
             textWidth = text.size() << 4;
             while (!text.isEmpty() && width < textWidth) {
                 text.truncate(text.size() - 1);
@@ -159,7 +159,7 @@ public:
                 rect.setLeft(rect.left());
                 //rect.setTopLeft(QPoint(rect.x(), rect.y() + (rect.height() - fu.height() + 8) / 2));
                 rect.setTopLeft(QPoint(rect.x(), rect.y() + 2));
-                rect.setWidth(fu.width() / 2);
+                rect.setWidth(16);
                 rect.setHeight(option.rect.height() - 4);
                 painter->setRenderHint(QPainter::Antialiasing);  //抗锯齿
                 painter->setRenderHints(QPainter::SmoothPixmapTransform);  //平滑像素图变换
@@ -170,14 +170,14 @@ public:
             if (isZi) {
                 //QPixmap pixmap2 = zi.scaled(option.rect.width() / 2, option.rect.height(), Qt::KeepAspectRatio);
                 painter->save();
-                int l1[2] = { 0, fu.width() / 2 + 4 };
+                int l1[2] = { 0, 20 };
                 rect = option.rect;
                 int left = 0;
                 left += rect.left();
                 left += l1[isFu];
                 rect.setLeft(left);
                 rect.setTopLeft(QPoint(rect.x(), rect.y() + 2));
-                rect.setWidth(zi.width() / 2);
+                rect.setWidth(16);
                 rect.setHeight(option.rect.height() - 4);
                 painter->setRenderHint(QPainter::Antialiasing);  //抗锯齿
                 painter->setRenderHints(QPainter::SmoothPixmapTransform);  //平滑像素图变换
@@ -188,15 +188,15 @@ public:
             if (isDong) {
                 painter->save();
                 rect = option.rect;
-                int l1[2] = { 0, fu.width() / 2 + 4 };
-                int l2[2] = { 0, zi.width() / 2 + 4 };
+                int l1[2] = { 0, 20 };
+                int l2[2] = { 0, 20 };
                 int left = 0;
                 left += rect.left();
                 left += l1[isFu];
                 left += l2[isZi];
                 rect.setLeft(left);
                 rect.setTopLeft(QPoint(rect.x(), rect.y() + 2));
-                rect.setWidth(dong.width() / 2);
+                rect.setWidth(16);
                 rect.setHeight(option.rect.height() - 4);
                 painter->setRenderHint(QPainter::Antialiasing);  //抗锯齿
                 painter->setRenderHints(QPainter::SmoothPixmapTransform);  //平滑像素图变换

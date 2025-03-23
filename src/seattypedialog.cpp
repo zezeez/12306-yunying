@@ -161,8 +161,10 @@ void SeatTypeDialog::setUp()
 
     //painter.drawRoundedRect(0, 0, 32, 32, 50, 50);
     painter.fillRect(image->rect(), QBrush(QColor(255,127,36))); // 橙色
+    //painter.fillRect(image->rect(), QBrush(QColor(255,153,51))); // 淡橙色
     //painter.fillRect(image->rect(), QBrush(Qt::red)); // 红色
     //painter.fillRect(image->rect(), QBrush(QColor(0,205,205))); // cyan
+    //painter.fillRect(image->rect(), QBrush(QColor(0,139,139)));
 
     //QPen pen(Qt::white, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     QPen pen(Qt::white, 1);
@@ -173,6 +175,7 @@ void SeatTypeDialog::setUp()
     //painter.drawEllipse(250, 50, 100, 150);  // 绘制椭圆
     QFont font;
     font.setPointSize(18);
+    font.setFamily("文泉驿点阵正黑");
     //font.setBold(true);
     painter.setFont(font);
 

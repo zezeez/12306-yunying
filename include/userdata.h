@@ -47,7 +47,7 @@ enum TrainTableColumnEnum {
     ETRAINTABLECOLUMNENDTOTAL
 };
 
-static QStringList trainTableColumnDesc = {
+static const QStringList trainTableColumnDesc = {
     "车次",
     "出发站",
     "到达站",
@@ -163,10 +163,10 @@ struct UserConfig {
 };
 
 #define MAX_ALPHA_NUM 26
-#define ISFUXING(x) ((x) & (1 << 0))
-#define ISZINENG(x) ((x) & (1 << 1))
-#define ISDONGGAN(x) ((x) & (1 << 2))
-#define CANCANDIDATE(x) ((x) & (1 << 3))
+#define ISFUXING(x) (((x) & (1 << 0)) != 0)
+#define ISZINENG(x) (((x) & (1 << 1)) != 0)
+#define ISDONGGAN(x) (((x) & (1 << 2)) != 0)
+#define CANCANDIDATE(x) (((x) & (1 << 3)) != 0)
 
 #define SETFUXING(x, b) ((x) = (x) | ((b) << 0))
 #define SETZINENG(x, b) ((x) = (x) | ((b) << 1))

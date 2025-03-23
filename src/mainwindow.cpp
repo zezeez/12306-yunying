@@ -904,9 +904,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
             connect(button, &QPushButton::clicked, this, &MainWindow::addTrainToSelected);
         }
         curText = trainInfo[ETEXTINFO];
-        if (curText == _("预订")) {
-            curText = tr("添加");
-        } else {
+        if (curText != _("预订")) {
             if (curText.endsWith(_("<br/>"))) {
                 curText.remove(_("<br/>"));
             }
