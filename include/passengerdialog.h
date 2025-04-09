@@ -1,9 +1,8 @@
 #ifndef PASSENGERDIALOG_H
 #define PASSENGERDIALOG_H
 #include <QDialog>
-#include <QString>
-#include <QListWidget>
 #include <QPushButton>
+#include "doublelistwidget.h"
 
 class PassengerDialog : public QDialog
 {
@@ -13,7 +12,7 @@ public:
     ~PassengerDialog();
     void setUp();
     void refreshPassengerInfo();
-    void updateSelectedTips();
+    void updateSelectedTips(int leftCount, int rightCount);
     const QList<QString> &getSelectedPassenger() const;
     void setSelectedPassenger();
     void setUnselectedPassenger();
@@ -28,14 +27,7 @@ public:
     void exitGrabTicketMode();
 
 public:
-    QListWidget *selected;
-    QListWidget *unSelected;
-    QPushButton *addSelectedPb;
-    QPushButton *addUnSelectedPb;
-    QPushButton *addSelectedAllPb;
-    QPushButton *addUnSelectedAllPb;
-    QPushButton *moveUpSelectedPb;
-    QPushButton *moveDownSelectPb;
+    DoubleListWidget *dListWidget;
     QPushButton *refreshPassengerPb;
 };
 

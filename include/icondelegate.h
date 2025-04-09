@@ -18,8 +18,11 @@ public:
         zi.load(_(":/icon/images/zi.ico"));
         dong.load(_(":/icon/images/dong.ico"));
         start.load(_(":/icon/images/start.ico"));
+        start.scaled(16, 16);
         pass.load(_(":/icon/images/pass.ico"));
+        pass.scaled(16, 16);
         end.load(_(":/icon/images/end.ico"));
+        end.scaled(16, 16);
     }
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
@@ -55,14 +58,12 @@ public:
             rect.setWidth(16);
             rect.setHeight(16);
             if (isStart) {
-                start.scaled(16, 16);
                 painter->drawPixmap(rect, start);
             } else {
-                pass.scaled(16, 16);
                 painter->drawPixmap(rect, pass);
             }
             painter->setPen(pen);
-            font.setPointSize(10);
+            font.setPointSize(9);
             font.setBold(true);
             painter->setFont(font);
             width = option.rect.width() - 16;
@@ -91,14 +92,12 @@ public:
             rect.setWidth(16);
             rect.setHeight(16);
             if (isEnd) {
-                end.scaled(16, 16);
                 painter->drawPixmap(rect, end);
             } else {
-                pass.scaled(16, 16);
                 painter->drawPixmap(rect, pass);
             }
             painter->setPen(pen);
-            font.setPointSize(10);
+            font.setPointSize(9);
             font.setBold(true);
             painter->setFont(font);
             width = option.rect.width() - 16;
@@ -154,10 +153,8 @@ public:
             isDong = ISDONGGAN(type);
             if (isFu) {
                 painter->save();
-                //QPixmap pixmap2 = fu.scaled(option.rect.width() / 2, option.rect.height(), Qt::KeepAspectRatio);
                 rect = option.rect;
                 rect.setLeft(rect.left());
-                //rect.setTopLeft(QPoint(rect.x(), rect.y() + (rect.height() - fu.height() + 8) / 2));
                 rect.setTopLeft(QPoint(rect.x(), rect.y() + 2));
                 rect.setWidth(16);
                 rect.setHeight(option.rect.height() - 4);
@@ -168,7 +165,6 @@ public:
                 handled = true;
             }
             if (isZi) {
-                //QPixmap pixmap2 = zi.scaled(option.rect.width() / 2, option.rect.height(), Qt::KeepAspectRatio);
                 painter->save();
                 int l1[2] = { 0, 20 };
                 rect = option.rect;

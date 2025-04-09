@@ -169,9 +169,6 @@ void InputCompleter::addStationFullPinYin(const QByteArray &staName, const QByte
     idx1 = static_cast<unsigned char>(staFullPinYin[0]);
     stationFullPinYinIndexLevel1[idx1] = idx1;
     stationFullPinYinIndexLevel2[idx2] = idx2;
-    if (idx1 == 103 && idx2 == 122) {
-        qDebug() << staName << staFullPinYin;
-    }
     stationFullPinYinData[STATIONPOS(idx1, idx2)].append(
         QPair<QByteArray, QString>(staFullPinYin, staName + _(" ") + staFullPinYin));
 }
@@ -190,6 +187,63 @@ void InputCompleter::addStationSimplePinYin(const QByteArray &staName,
         QPair<QByteArray, QString>(staSimplePinYin, staName + _(" ") + staFullPinYin));
 }
 
+void InputCompleter::metaFilter(const QByteArray &word,
+                                QVector<QPair<QByteArray, QString>> &meta,
+                                QStringList &result)
+{
+    int idx11 = 0, idx21 = 0, idx31 = 0;
+    int idx12 = -1, idx22 = -1, idx32 = -1;
+    int idx;
+    unsigned char w0, w1;
+
+    if (word.size() > 0) {
+        w0 = word[0];
+        idx11 = stationSimplePinYinIndexLevel1[w0];
+        idx21 = stationFullPinYinIndexLevel1[w0];
+        idx31 = stationNameIndexLevel1[w0];
+    }
+
+    if (word.size() > 1) {
+        w1 = word[1];
+        idx12 = stationSimplePinYinIndexLevel2[w1];
+        idx22 = stationFullPinYinIndexLevel2[w1];
+        idx32 = stationNameIndexLevel2[w1];
+    }
+
+    const QVector<QVector<QVector<QPair<QByteArray, QString>>>> &v = {
+        stationSimplePinYinData,
+        stationFullPinYinData,
+        stationNameData
+    };
+    QVector<int> idx1 = { idx11, idx21, idx31 };
+    QVector<int> idx2 = { idx12, idx22, idx32 };
+    int basePos = 0;
+
+    for (int i = 0; i < v.size(); i++) {
+        if (idx1[i] != -1) {
+            if (idx2[i] == -1) {
+                basePos = STATIONL1POS(idx1[i]);
+                for (idx = 0; idx < 256; idx++) {
+                    if (!v[i][basePos +
+                              STATIONL2POS(idx)].isEmpty()) {
+                        for (auto &d : v[i][basePos +
+                                            STATIONL2POS(idx)]) {
+                            result.append(d.second);
+                        }
+                    }
+                }
+            } else {
+                if (!v[i][STATIONPOS(idx1[i], idx2[i])].isEmpty()) {
+                    meta.append(v[i][STATIONPOS(idx1[i], idx2[i])]);
+                    for (auto &d : v[i][STATIONPOS(idx1[i], idx2[i])]) {
+                        result.append(d.second);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void InputCompleter::update(const QByteArray &word)
 {
     // Do any filtering you like.
@@ -198,97 +252,41 @@ void InputCompleter::update(const QByteArray &word)
     QStringList result;
 
     int count = word.length() - m_word.length();
-    if (word.length() > 2) {
-            if (count > 0) {
-                isAppend = true;
-                if (!keyWordStack.empty()) {
-                    previous = keyWordStack.top();
-                    for (it = previous.cbegin(); it != previous.cend(); it++) {
-                        if (it->first.startsWith(word)) {
-                            result.append(it->second);
-                            current.append(*it);
-                        }
-                    }
-                    keyWordStack.push(current);
-                }
-            } else {
-                if (isAppend)
-                    count--;
-                isAppend = false;
-                while (count++ < 0) {
-                    if (!keyWordStack.isEmpty())
-                        current = keyWordStack.pop();
-                }
-                for (it = current.cbegin(); it != current.cend(); it++) {
-                    result.append(it->second);
-                }
+
+    if (count > 0) {
+        isAppend = true;
+        if (m_word.length() < 2 || keyWordStack.isEmpty()) {
+            isAppend = true;
+            metaFilter(word, current, result);
+            if (!current.isEmpty()) {
+                keyWordStack.push(current);
             }
-    } else {
-        if (!word.isEmpty()) {
-            if (count > 0) {
-                int idx11 = 0, idx21 = 0, idx31 = 0;
-                unsigned char w0, w1;
-                isAppend = true;
-                if (word.size() > 0) {
-                    w0 = word[0];
-                    idx11 = stationSimplePinYinIndexLevel1[w0];
-                    idx21 = stationFullPinYinIndexLevel1[w0];
-                    idx31 = stationNameIndexLevel1[w0];
-                }
-                int idx12 = -1, idx22 = -1, idx32 = -1;
-                if (word.size() > 1) {
-                    w1 = word[1];
-                    idx12 = stationSimplePinYinIndexLevel2[w1];
-                    idx22 = stationFullPinYinIndexLevel2[w1];
-                    idx32 = stationNameIndexLevel2[w1];
-                }
-                int idx;
-                const QVector<QVector<QVector<QPair<QByteArray, QString>>>> &v = {
-                    stationSimplePinYinData,
-                    stationFullPinYinData,
-                    stationNameData
-                };
-                QVector<int> idx1 = { idx11, idx21, idx31 };
-                QVector<int> idx2 = { idx12, idx22, idx32 };
-                int basePos = 0;
-                for (int i = 0; i < v.size(); i++) {
-                    if (idx1[i] != -1) {
-                        if (idx2[i] == -1) {
-                            basePos = STATIONL1POS(idx1[i]);
-                            for (idx = 0; idx < 256; idx++) {
-                                if (!v[i][basePos +
-                                    STATIONL2POS(idx)].isEmpty()) {
-                                    keyWordStack.push(v[i][basePos +
-                                                           STATIONL2POS(idx)]);
-                                    for (auto &d : v[i][basePos +
-                                                        STATIONL2POS(idx)]) {
-                                        result.append(d.second);
-                                    }
-                                }
-                            }
-                        } else {
-                            if (!v[i][STATIONPOS(idx1[i], idx2[i])].isEmpty()) {
-                                keyWordStack.push(v[i][STATIONPOS(idx1[i], idx2[i])]);
-                                 for (auto &d : v[i][STATIONPOS(idx1[i], idx2[i])]) {
-                                    result.append(d.second);
-                                }
-                            }
-                        }
+        } else {
+            if (!keyWordStack.empty()) {
+                previous = keyWordStack.top();
+                for (it = previous.cbegin(); it != previous.cend(); it++) {
+                    if (it->first.startsWith(word)) {
+                        result.append(it->second);
+                        current.append(*it);
                     }
                 }
-            } else {
-                if (isAppend)
-                    count--;
-                isAppend = false;
-                while (count++ < 0) {
-                    if (!keyWordStack.isEmpty())
-                        current = keyWordStack.pop();
-                }
-                for (it = current.cbegin(); it != current.cend(); it++) {
-                    result.append(it->second);
+                if (!current.isEmpty()) {
+                    keyWordStack.push(current);
                 }
             }
         }
+    } else {
+        while (count++ < 0) {
+            if (!keyWordStack.isEmpty())
+                current = keyWordStack.pop();
+        }
+        if (isAppend && !keyWordStack.isEmpty()) {
+            current = keyWordStack.top();
+        }
+        for (it = current.cbegin(); it != current.cend(); it++) {
+            result.append(it->second);
+        }
+        isAppend = false;
     }
 
     if (!result.isEmpty()) {
@@ -320,7 +318,8 @@ void CompleteEdit::setCompleter(InputCompleter *completer)
         return;
 
     c->setWidget(this);
-    connect(completer, SIGNAL(activated(const QString &)), this, SLOT(insertCompletion(const QString &)));
+    connect(completer, qOverload<const QString &>(&InputCompleter::activated),
+            this, qOverload<const QString &>(&CompleteEdit::insertCompletion));
 }
 
 InputCompleter *CompleteEdit::completer() const
@@ -369,276 +368,12 @@ void CompleteEdit::keyPressEvent(QKeyEvent *e)
     c->popup()->setCurrentIndex(c->completionModel()->index(0, 0));
 }
 
-VarCodeLabel::VarCodeLabel(QWidget *parent) :
-    QLabel(parent), area(9)
+void CompleteEdit::inputMethodEvent(QInputMethodEvent *event)
 {
-    QVector<mapArea>::iterator it;
-    for (it = area.begin(); it != area.end(); ++it) {
-        (*it).active = false;
-        (*it).selected = false;
+    QLineEdit::inputMethodEvent(event);
+
+    if (c) {
+        c->update(text().toUtf8());
+        c->popup()->setCurrentIndex(c->completionModel()->index(0, 0));
     }
-
-    for (int i = 0; i < 9; i++) {
-        picLabel[i].setParent(this);
-        picLabel[i].hide();
-        picLabel[i].setFixedSize(64, 64);
-        picLabel[i].setPixmap(QPixmap(QStringLiteral(":/icon/images/selected.svg")));
-    }
-}
-
-void VarCodeLabel::mouseMoveEvent(QMouseEvent *ev)
-{
-    QLabel::mouseMoveEvent(ev);
-}
-
-void VarCodeLabel::mousePressEvent(QMouseEvent *ev)
-{
-    if (ev->button() == Qt::LeftButton) {
-        QPoint point;
-        //point.setX(ev->x() + 10);
-        //point.setY(ev->y() - 35);
-        //point = ev->pos();
-        point.setX(ev->position().x() + 20);
-        point.setY(ev->position().y() - 35);
-        int ar = getArea(ev->position().x(), ev->position().y());
-        if (ar > 0 && ar <= 8) {
-            struct mapArea &ma = area[ar];
-            ma.pos = point;
-            if (!picLabel[ar].isVisible()) {
-                picLabel[ar].move(ev->position().x() - 30, ev->position().y() - 45);
-                picLabel[ar].show();
-            } else {
-                picLabel[ar].hide();
-            }
-            ma.selected = !ma.selected;
-        }
-        qDebug() << "(x, y) = " << "(" << point.rx() << ", " << point.ry() << ")" << Qt::endl;
-    }
-}
-
-void VarCodeLabel::mouseReleaseEvent(QMouseEvent *ev)
-{
-    QLabel::mouseReleaseEvent(ev);
-}
-
-void VarCodeLabel::paintEvent(QPaintEvent *ev)
-{
-    QLabel::paintEvent(ev);
-}
-
-int VarCodeLabel::getArea(int x, int y)
-{
-    int w = width();
-    int h = height();
-    int xstep = w / 4;
-    int ystep = (h - 45) / 2;
-    int i, j;
-
-    for (i = 0; i < 2; i++) {
-        for (j = 0; j < 4; j++) {
-            int xmax = xstep * (j + 1);
-            int xmin = xstep * j;
-            int ymax = ystep * (i + 1);
-            int ymin = ystep * i;
-            if (x >= xmin && x < xmax && y >= ymin + 45 && y < ymax + 42) {
-                return i * 4 + j + 1;
-            }
-        }
-    }
-    return 0;
-}
-
-void VarCodeLabel::clearSelected()
-{
-    for (int i = 0; i < area.size(); i++) {
-        area[i].selected = false;
-    }
-    for (int i = 0; i < 9; i++) {
-        picLabel[i].hide();
-    }
-}
-
-QVector<mapArea> &VarCodeLabel::getPoints()
-{
-    return area;
-}
-
-VarCodeLabel::~VarCodeLabel()
-{
-
-}
-
-
-ClickLabel::ClickLabel(QWidget *parent) :
-    QLabel(parent)
-{
-
-}
-
-ClickLabel::~ClickLabel()
-{
-
-}
-
-void ClickLabel::mousePressEvent(QMouseEvent *ev)
-{
-    QLabel::mousePressEvent(ev);
-    emit clicked(ev->position().x(), ev->position().y());
-}
-
-CheckedLabel::CheckedLabel(QWidget *parent) : ClickLabel(parent)
-{
-    checkedIndicator.setParent(this);
-    //checkedIndicator.setFixedSize(64, 64);
-    checkedIndicator.setPixmap(QPixmap(QStringLiteral(":/icon/images/selected.svg")));
-}
-
-CheckedLabel::~CheckedLabel()
-{
-
-}
-
-void CheckedLabel::mousePressEvent(QMouseEvent *ev)
-{
-    checkedIndicator.show();
-    ClickLabel::mousePressEvent(ev);
-}
-
-void CheckedLabel::setChecked(bool checked)
-{
-    if (checked) {
-        checkedIndicator.show();
-    } else {
-        checkedIndicator.hide();
-    }
-}
-
-void CheckedLabel::reSetCheckedPos()
-{
-    checkedIndicator.move(35, 0);
-}
-
-MultiAreaLabel::MultiAreaLabel(QWidget *parent, int areaCount, int areaWidth, int areaHeight) :
-    QWidget(parent)
-{
-    count = areaCount;
-    width = areaWidth;
-    height = areaHeight;
-    areaList.resize(areaCount);
-    int row = 0, col = 0;
-    for (int i = 0; i < areaCount; i++) {
-        areaList[i] = new CheckedLabel;
-        areaList[i]->setChecked(false);
-        connect(areaList[i], &CheckedLabel::clicked, this, &MultiAreaLabel::areaClicked);
-        gridlayout.addWidget(areaList[i], row, col);
-        col++;
-        if (col >= 4) {
-            row++;
-            col = 0;
-        }
-    }
-    areaList[0]->setChecked(true);
-    areaSel = 0;
-}
-
-MultiAreaLabel::~MultiAreaLabel()
-{
-    for (int i = 0; i < count; i++) {
-        delete areaList[i];
-    }
-}
-
-void MultiAreaLabel::setAreaCount(int c)
-{
-    count = c;
-}
-
-int MultiAreaLabel::areaCount() const
-{
-    return count;
-}
-
-void MultiAreaLabel::setAreaWidth(int w)
-{
-    width = w;
-}
-
-int MultiAreaLabel::areaWidth() const
-{
-    return width;
-}
-
-void MultiAreaLabel::setAreaHeight(int h)
-{
-    height = h;
-}
-
-int MultiAreaLabel::areaHeight() const
-{
-    return height;
-}
-
-void MultiAreaLabel::setAreaPixmap(int area, const QString &file)
-{
-    if (area >= count) {
-        return;
-    }
-
-    areaList[area]->setPixmap(QPixmap(file));
-    areaList[area]->reSetCheckedPos();
-}
-
-void MultiAreaLabel::setAreasPixmap(const QStringList &files)
-{
-    int n = qMin(count, files.size());
-    for (int i = 0; i < n; i++) {
-        setAreaPixmap(i, files[i]);
-    }
-}
-
-void MultiAreaLabel::show()
-{
-    for (int i = 0; i < count; i++) {
-        areaList[i]->show();
-    }
-}
-
-void MultiAreaLabel::hide()
-{
-    for (int i = 0; i < count; i++) {
-        areaList[i]->hide();
-    }
-}
-
-void MultiAreaLabel::areaClicked()
-{
-    CheckedLabel *l = dynamic_cast<CheckedLabel *>(sender());
-    for (int i = 0; i < count; i++) {
-        if (areaList[i] != l) {
-            areaList[i]->setChecked(false);
-        } else {
-            areaSel = i;
-        }
-    }
-    emit clicked(areaSel);
-}
-
-QGridLayout *MultiAreaLabel::layout()
-{
-    return &gridlayout;
-}
-
-void MultiAreaLabel::setAreaSelected(int area)
-{
-    if (area < count) {
-        for (int i = 0; i < count; i++) {
-            areaList[i]->setChecked(false);
-        }
-        areaList[area]->setChecked(true);
-    }
-}
-
-int MultiAreaLabel::areaSelected() const
-{
-    return areaSel;
 }

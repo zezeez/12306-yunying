@@ -435,6 +435,7 @@ void SettingDialog::grabTicketSetting(QTabWidget *tab)
     vlayout->addLayout(hlayout1);
     vlayout->addStretch();
 
+    QButtonGroup *btnGroup = new QButtonGroup;
     QGroupBox *gbox = new QGroupBox(tr("刷票模式"));
     vlayout1 = new QVBoxLayout;
     shortRb = new QRadioButton(tr("默认模式(3秒)"));
@@ -447,6 +448,8 @@ void SettingDialog::grabTicketSetting(QTabWidget *tab)
     checked = setting.value(_("grab_setting/grab_short"), true).value<bool>();
     shortRb->setChecked(checked);
     vlayout1->addWidget(shortRb);
+    btnGroup->addButton(shortRb);
+
     /*rb = new QRadioButton(tr("长间隔模式(30秒)"));
     connect(rb, &QRadioButton::toggled, this, [] (bool checked) {
         UserData *ud = UserData::instance();
@@ -477,6 +480,8 @@ void SettingDialog::grabTicketSetting(QTabWidget *tab)
     checked = setting.value(_("grab_setting/grab_random"), false).value<bool>();
     randomRb->setChecked(checked);
     vlayout1->addWidget(randomRb);
+    btnGroup->addButton(randomRb);
+
     fixTimeRb = new QRadioButton(tr("定时抢票模式(间隔1秒超过15秒之后切换默认模式)"));
     connect(fixTimeRb, &QRadioButton::toggled, this, [] (bool checked) {
         UserData *ud = UserData::instance();
@@ -487,6 +492,8 @@ void SettingDialog::grabTicketSetting(QTabWidget *tab)
     checked = setting.value(_("grab_setting/grab_fixed_time"), false).value<bool>();
     fixTimeRb->setChecked(checked);
     vlayout1->addWidget(fixTimeRb);
+    btnGroup->addButton(fixTimeRb);
+
     sbox = new QSpinBox;
     customRb = new QRadioButton(tr("自定义(秒)"));
     connect(customRb, &QRadioButton::toggled, this, [sbox] (bool checked) {
@@ -499,6 +506,7 @@ void SettingDialog::grabTicketSetting(QTabWidget *tab)
     checked = setting.value(_("grab_setting/grab_custom"), false).value<bool>();
     customRb->setChecked(checked);
     //vlayout1->addWidget(rb);
+    btnGroup->addButton(customRb);
 
     sbox->setMinimum(1);
     sbox->setMaximum(3600);

@@ -20,6 +20,7 @@ extern MainWindow *w;
 TrainNoDialog::TrainNoDialog(QWidget *parent) :
     QDialog(parent)
 {
+    dListWidget = new DoubleListWidget;
 }
 
 TrainNoDialog::~TrainNoDialog()
@@ -28,71 +29,15 @@ TrainNoDialog::~TrainNoDialog()
 
 void TrainNoDialog::setUp()
 {
-    unSelected = new QListWidget;
-    unSelected->setMinimumWidth(300);
-    selected = new QListWidget;
-    selected->setMinimumWidth(300);
     QFont font;
-    font.setPointSize(11);
-    QLabel *label = new QLabel(tr("未选中车次："));
-    label->setFont(font);
 
-    unSelected->setCurrentRow(0);
-
-    QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addWidget(label);
-    vLayout->addWidget(unSelected);
-
-    QVBoxLayout *vLayout2 = new QVBoxLayout;
-    vLayout2->addStretch();
-    addSelectedPb = new QPushButton;
-    addSelectedPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_right.png")));
-    connect(addSelectedPb, &QPushButton::clicked, this, &TrainNoDialog::setSelectedTrainNo);
-    addSelectedPb->setEnabled(unSelected->count() != 0);
-    vLayout2->addWidget(addSelectedPb);
-
-    addUnSelectedPb = new QPushButton;
-    addUnSelectedPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_left.png")));
-    connect(addUnSelectedPb, &QPushButton::clicked, this, &TrainNoDialog::setUnselectedTrainNo);
-    addUnSelectedPb->setEnabled(selected->count() != 0);
-    vLayout2->addWidget(addUnSelectedPb);
-    vLayout2->addStretch();
-    moveUpSelectedPb = new QPushButton;
-    moveUpSelectedPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_up.png")));
-    connect(moveUpSelectedPb, &QPushButton::clicked, this, &TrainNoDialog::moveUpTrain);
-    vLayout2->addWidget(moveUpSelectedPb);
-    moveDownSelectPb = new QPushButton;
-    moveDownSelectPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_down.png")));
-    connect(moveDownSelectPb, &QPushButton::clicked, this, &TrainNoDialog::moveDownTrain);
-    vLayout2->addWidget(moveDownSelectPb);
-    vLayout2->addStretch();
-
-    addSelectedAllPb = new QPushButton;
-    addSelectedAllPb->setIcon(QIcon(QStringLiteral(":/icon/images/double_arrow_right.png")));
-    connect(addSelectedAllPb, &QPushButton::clicked, this, &TrainNoDialog::addSelectedTrainAll);
-    addSelectedAllPb->setEnabled(unSelected->count() != 0);
-    vLayout2->addWidget(addSelectedAllPb);
-
-    addUnSelectedAllPb = new QPushButton;
-    addUnSelectedAllPb->setIcon(QIcon(QStringLiteral(":/icon/images/double_arrow_left.png")));
-    connect(addUnSelectedAllPb, &QPushButton::clicked, this, &TrainNoDialog::clearSelectedTrain);
-    addUnSelectedAllPb->setEnabled(selected->count() != 0);
-    vLayout2->addWidget(addUnSelectedAllPb);
-
-
-    QVBoxLayout *vLayout3 = new QVBoxLayout;
-    label = new QLabel(tr("已选中车次："));
-    label->setFont(font);
-    vLayout3->addWidget(label);
-    vLayout3->addWidget(selected);
-
-    QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addLayout(vLayout);
-    hLayout->addLayout(vLayout2);
-    hLayout->addLayout(vLayout3);
+    dListWidget->setMinimumWidth(300);
+    dListWidget->setLeftTitle(tr("未选中车次："));
+    dListWidget->setRightTitle(tr("已选中车次："));
+    connect(dListWidget, &DoubleListWidget::listCountChanged, this, &TrainNoDialog::updateSelectedTips);
 
     QVBoxLayout *outvLayout = new QVBoxLayout;
-    outvLayout->addLayout(hLayout);
+    outvLayout->addWidget(dListWidget);
 
     font.setPointSize(10);
     QVBoxLayout *vLayout4 = new QVBoxLayout;
@@ -253,7 +198,7 @@ void TrainNoDialog::setUp()
     timeEdit2->setTime(QTime(hour, minute));
 
     hLayout2->addWidget(timeEdit1);
-    label = new QLabel(QStringLiteral("-"));
+    QLabel *label = new QLabel(QStringLiteral("-"));
     hLayout2->addWidget(label);
     hLayout2->addWidget(timeEdit2);
     hLayout2->addStretch();
@@ -280,20 +225,17 @@ void TrainNoDialog::setUp()
 
     setLayout(outvLayout);
     setWindowTitle(tr("选择车次"));
-    //trainNoDialog->resize(400, 400);
-    //dialog->exec();
 }
 
-void TrainNoDialog::updateSelectedTips()
+void TrainNoDialog::updateSelectedTips(int leftCount, int rightCount)
 {
-    QString tips = tr("已选%1/%2").arg(selected->count()).arg(trainSet.count());
+    QString tips = tr("已选%1/%2").arg(rightCount).arg(leftCount + rightCount);
     w->selectedTrainTipsLabel->setText(tips);
-    addSelectedPb->setEnabled(unSelected->count() != 0);
-    addSelectedAllPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedPb->setEnabled(selected->count() != 0);
-    addUnSelectedAllPb->setEnabled(selected->count() != 0);
-    //QSettings setting;
-    //setting.setValue(_("train/selected_train"), getSelectedTrainList().toList());
+    selectedTrainSet.clear();
+    const QStringList &slist = dListWidget->rightListContent();
+    for (const QString &s : slist) {
+        selectedTrainSet.insert(s);
+    }
 }
 
 bool TrainNoDialog::hasTrain(const QString &trainInfo)
@@ -304,111 +246,57 @@ bool TrainNoDialog::hasTrain(const QString &trainInfo)
 void TrainNoDialog::addTrain(const QString &trainInfo)
 {
     if (!hasTrain(trainInfo)) {
-        QListWidgetItem *item = new QListWidgetItem(unSelected);
-        item->setData(Qt::DisplayRole, trainInfo);
-        unSelected->setCurrentItem(item);
-        addSelectedPb->setEnabled(true);
+        dListWidget->addLeftItem(trainInfo, Qt::MatchStartsWith);
         trainSet.insert(trainInfo);
     }
 }
 
 void TrainNoDialog::addTrainFinish()
 {
-    if (UserData::instance()->runStatus == EIDLE) {
-        updateSelectedTips();
-        unSelected->setCurrentRow(0);
-    }
+    dListWidget->setLeftCurrentRow(0);
 }
 
 void TrainNoDialog::addSelectedTrain(const QString &trainInfo)
 {
     if (!trainInfo.isEmpty()) {
-        QList<QListWidgetItem *> itemList = selected->findItems(trainInfo + ' ', Qt::MatchStartsWith);
-        if (itemList.isEmpty()) {
-            itemList = unSelected->findItems(trainInfo + ' ', Qt::MatchStartsWith);
-            if (itemList.isEmpty()) {
-                return;
-            }
-            QListWidgetItem *item = unSelected->takeItem(unSelected->row(itemList[0]));
-            selected->addItem(item);
-            //QStringList textList = item->text().split(' ');
-            //selectedTrainSet.insert(_("%1 %2 %3").arg(textList[0], textList[1], textList[2]));
-            selectedTrainSet.insert(trainInfo);
-        }
-        updateSelectedTips();
+        dListWidget->moveLeftItemToRight(trainInfo + ' ', Qt::MatchStartsWith);
+        selectedTrainSet.insert(trainInfo);
     }
 }
 
 void TrainNoDialog::removeSelectedTrain(const QString &trainInfo)
 {
     if (!trainInfo.isEmpty()) {
-        QList<QListWidgetItem *> itemList = unSelected->findItems(trainInfo + ' ', Qt::MatchStartsWith);
-        if (itemList.isEmpty()) {
-            itemList = selected->findItems(trainInfo + ' ', Qt::MatchStartsWith);
-            if (itemList.isEmpty()) {
-                return;
-            }
-            QListWidgetItem *item = selected->takeItem(selected->row(itemList[0]));
-            unSelected->addItem(item);
-            //QStringList textList = item->text().split(' ');
-            //selectedTrainSet.remove(_("%1 %2 %3").arg(textList[0], textList[1], textList[2]));
-            selectedTrainSet.insert(trainInfo);
-        }
-        updateSelectedTips();
+        dListWidget->moveRightItemToLeft(trainInfo + ' ', Qt::MatchStartsWith);
+        selectedTrainSet.remove(trainInfo);
     }
 }
 
 void TrainNoDialog::addSelectedTrainAll()
 {
-    if (unSelected->count()) {
-        unSelected->setCurrentRow(unSelected->count() - 1);
-        while (unSelected->count()) {
-            QListWidgetItem *item = unSelected->takeItem(unSelected->currentRow());
-            selected->addItem(item);
-            QStringList textList = item->text().split(' ');
-            selectedTrainSet.insert(_("%1 %2 %3").arg(textList[0], textList[1], textList[2]));
-        }
-        selected->setCurrentRow(0);
-        updateSelectedTips();
-    }
+    dListWidget->moveCurrentLeftItemToRightAll();
 }
 
 void TrainNoDialog::clearSelectedTrain()
 {
-    if (selected->count()) {
-        selected->setCurrentRow(selected->count() - 1);
-        while (selected->count()) {
-            QListWidgetItem *item = selected->takeItem(selected->currentRow());
-            unSelected->addItem(item);
-            QStringList textList = item->text().split(' ');
-            selectedTrainSet.remove(_("%1 %2 %3").arg(textList[0], textList[1], textList[2]));
-        }
-        unSelected->setCurrentRow(0);
-        updateSelectedTips();
-    }
+    dListWidget->moveCurrentRightItemToLeftAll();
 }
 
 void TrainNoDialog::clearUnSelectedTrain()
 {
-    if (unSelected->count()) {
-        unSelected->setCurrentRow(unSelected->count() - 1);
-        while (unSelected->count()) {
-            QListWidgetItem *item = unSelected->takeItem(unSelected->currentRow());
-            trainSet.remove(item->text());
-            delete item;
-        }
-        updateSelectedTips();
-    }
+    dListWidget->clearLeftList();
+    trainSet.clear();
 }
 
 const QList<QString> &TrainNoDialog::getSelectedTrainList() const
 {
     static QList<QString> trainNoList;
+    const QStringList &slist = dListWidget->rightListContent();
     trainNoList.clear();
-    trainNoList.resize(selected->count());
+    trainNoList.resize(slist.size());
     int idx = 0;
-    for (int i = 0; i < selected->count(); i++) {
-        const QString &s = selected->item(i)->text();
+    for (int i = 0; i < slist.size(); i++) {
+        const QString &s = slist[i];
         int j, k;
         for (j = 0, k = 0; j < s.size(); j++) {
             if (s[j] == ' ')
@@ -433,87 +321,12 @@ const QSet<QString> &TrainNoDialog::getAllTrainSet() const
     return trainSet;
 }
 
-void TrainNoDialog::setSelectedTrainNo()
-{
-    QListWidgetItem *item = unSelected->currentItem();
-    if (item) {
-        QList<QListWidgetItem *> list = selected->findItems(item->text(), Qt::MatchExactly);
-        if (list.isEmpty()) {
-            //QListWidgetItem *item2 = new QListWidgetItem(selected);
-            //item2->setData(Qt::DisplayRole, QObject::tr("%1").arg(item->text()));
-            //selected->setCurrentItem(unSelected->takeItem(unSelected->currentRow()));
-            //delete unSelected->takeItem(unSelected->currentRow());
-            QListWidgetItem *item = unSelected->takeItem(unSelected->currentRow());
-            selected->addItem(item);
-            selected->setCurrentItem(item);
-            QStringList textList = item->text().split(' ');
-            selectedTrainSet.insert(_("%1 %2 %3").arg(textList[0], textList[1], textList[2]));
-        }
-    }
-    updateSelectedTips();
-}
-
-void TrainNoDialog::setUnselectedTrainNo()
-{
-    QListWidgetItem *item = selected->currentItem();
-
-    if (item) {
-        //QListWidgetItem *item2 = new QListWidgetItem(unSelected);
-        //item2->setData(Qt::DisplayRole, QObject::tr("%1").arg(item->text()));
-        //unSelected->setCurrentItem(selected->takeItem(selected->currentRow()));
-        //delete selected->takeItem(selected->currentRow());
-        QListWidgetItem *item = selected->takeItem(selected->currentRow());
-        unSelected->addItem(item);
-        unSelected->setCurrentItem(item);
-        QStringList textList = item->text().split(' ');
-        selectedTrainSet.remove(_("%1 %2 %3").arg(textList[0], textList[1], textList[2]));
-    }
-
-    updateSelectedTips();
-}
-
-void TrainNoDialog::moveUpTrain()
-{
-    QListWidgetItem *item = selected->currentItem();
-    if (item) {
-        int row = selected->row(item);
-        if (row > 0) {
-            selected->takeItem(row);
-            selected->insertItem(row - 1, item);
-            selected->setCurrentItem(item);
-        }
-    }
-}
-
-void TrainNoDialog::moveDownTrain()
-{
-    QListWidgetItem *item = selected->currentItem();
-    if (item) {
-        int row = selected->row(item);
-        if (row < selected->count() - 1) {
-            selected->takeItem(row);
-            selected->insertItem(row + 1, item);
-            selected->setCurrentItem(item);
-        }
-    }
-}
-
 void TrainNoDialog::enterGrabTicketMode()
 {
-    addSelectedPb->setEnabled(false);
-    addUnSelectedPb->setEnabled(false);
-    addSelectedAllPb->setEnabled(false);
-    addUnSelectedAllPb->setEnabled(false);
-    moveUpSelectedPb->setEnabled(false);
-    moveDownSelectPb->setEnabled(false);
+    dListWidget->setDisableEdit();
 }
 
 void TrainNoDialog::exitGrabTicketMode()
 {
-    addSelectedPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedPb->setEnabled(selected->count() != 0);
-    addSelectedAllPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedAllPb->setEnabled(selected->count() != 0);
-    moveUpSelectedPb->setEnabled(true);
-    moveDownSelectPb->setEnabled(true);
+    dListWidget->setEnableEdit();
 }

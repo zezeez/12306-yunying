@@ -16,68 +16,20 @@ void UserData::setStationCode(const QByteArray &name, const QByteArray &code)
     staCode->insert(QString::fromUtf8(name), QString::fromUtf8(code));
 }
 
-QString UserData::seatTypeToDesc(int idx)
-{
-    switch (idx) {
-    case ESEATSPECIALSEAT:
-        return QStringLiteral("特等座");
-    case ESEATFIRSTPRISEAT:
-        return QStringLiteral("一等座");
-    case ESEATSECONDPRISEAT:
-        return QStringLiteral("二等座");
-    case ESEATADVSOFTCROUCH:
-        return QStringLiteral("高级软卧");
-    case ESEATSOFTCROUCH:
-        return QStringLiteral("软卧");
-    case ESEATSTIRCROUCH:
-        return QStringLiteral("动卧");
-    case ESEATHARDCROUCH:
-        return QStringLiteral("硬卧");
-    case ESEATSOFTSEAT:
-        return QStringLiteral("软座");
-    case ESEATHARDSEAT:
-        return QStringLiteral("硬座");
-    case ESEATNOSEAT:
-        return QStringLiteral("无座");
-    default:
-        return "";
-    }
-}
-
 struct PassengerInfo UserData::setPassengerInfo(QVariantMap &map)
 {
-    QString idx;
     struct PassengerInfo pinfo;
 
-    idx = map[QLatin1String("allEncStr")].toString();
-    pinfo.allEncStr = idx;
-
-    idx = map[QLatin1String("passenger_name")].toString();
-    pinfo.passName = idx;
-
-    idx = map[QLatin1String("passenger_id_type_code")].toString();
-    pinfo.passIdTypeCode = idx;
-
-    idx = map[QLatin1String("passenger_id_type_name")].toString();
-    pinfo.passIdTypeName = idx;
-
-    idx = map[QLatin1String("passenger_id_no")].toString();
-    pinfo.passIdNo = idx;
-
-    idx = map[QLatin1String("passenger_type")].toString();
-    pinfo.passType = idx;
-
-    idx = map[QLatin1String("passenger_type_name")].toString();
-    pinfo.passTypeName = idx;
-
-    idx = map[QLatin1String("mobile_no")].toString();
-    pinfo.mobile = idx;
-
-    idx = map[QLatin1String("phone_no")].toString();
-    pinfo.phone = idx;
-
-    idx = map[QLatin1String("index_id")].toString();
-    pinfo.indexId = idx;
+    pinfo.allEncStr = map[QLatin1String("allEncStr")].toString();
+    pinfo.passName = map[QLatin1String("passenger_name")].toString();
+    pinfo.passIdTypeCode = map[QLatin1String("passenger_id_type_code")].toString();
+    pinfo.passIdTypeName = map[QLatin1String("passenger_id_type_name")].toString();
+    pinfo.passIdNo = map[QLatin1String("passenger_id_no")].toString();
+    pinfo.passType = map[QLatin1String("passenger_type")].toString();
+    pinfo.passTypeName = map[QLatin1String("passenger_type_name")].toString();
+    pinfo.mobile = map[QLatin1String("mobile_no")].toString();
+    pinfo.phone = map[QLatin1String("phone_no")].toString();
+    pinfo.indexId = map[QLatin1String("index_id")].toString();
 
     return pinfo;
 }
@@ -116,58 +68,6 @@ bool UserData::isTimeInRange(int hour, int minute)
 UserData::~UserData()
 {
     delete staCode;
-}
-
-QString seatTypeSubmtiCodeTransToDesc(QChar seatType)
-{
-    switch (seatType.toLatin1()) {
-    case '1':
-        return _("硬座");
-    case '3':
-        return _("硬卧");
-    case '4':
-        return _("软卧");
-    case '9':
-        return _("商务");
-    case 'A':
-        return _("高级动卧");
-    case 'F':
-        return _("动卧");
-    case 'O':
-        return _("二等座");
-    case 'M':
-        return _("一等座");
-    case 'P':
-        return _("特等座");
-    case 'W':
-        return _("无座");
-    default:
-        return _("");
-    }
-}
-
-QChar seatTypeEnumTransToSubmitCode(enum TrainInfoEnum seatType)
-{
-    const QVector<QChar> code = {
-        '0',
-        '6',
-        '0',
-        '4',
-        '2',
-        'P',
-        'W',
-        '0',
-        '3',
-        '1',
-        'O',
-        'M',
-        '9',
-        'F',
-    };
-    int idx = seatType - EGGNUM;
-    if (idx < 0 || idx >= code.size())
-        return '0';
-    return code[idx];
 }
 
 QString getAppDataPath()

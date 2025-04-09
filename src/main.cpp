@@ -15,17 +15,20 @@ MainWindow *w;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    QFile qss(QStringLiteral(":/res/main.qss"));
+    if (qss.open(QFile::ReadOnly)) {
+        a.setStyleSheet(qss.readAll());
+        qss.close();
+    }
+
     QSplashScreen *splash = new QSplashScreen;
     splash->setPixmap(QPixmap(QStringLiteral(":/icon/images/splash.jpeg")));
     splash->show();
 
     splash->showMessage(QObject::tr("正在加载资源..."),
                         Qt::AlignBottom | Qt::AlignLeft, Qt::white);
-    QFile qss(QStringLiteral(":/res/main.qss"));
-    if (qss.open(QFile::ReadOnly)) {
-        a.setStyleSheet(qss.readAll());
-        qss.close();
-    }
+
     splash->showMessage(QObject::tr("正在加载站点数据..."),
                         Qt::AlignBottom | Qt::AlignLeft, Qt::white);
 
@@ -34,9 +37,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName(_("云映"));
 
     w = new MainWindow;
+    w->setUp();
     w->setWindowTitle(QObject::tr("云映 ") + QObject::tr(THISVERSION));
     w->setWindowIcon(QIcon(_(":/icon/images/ticket.ico")));
-    w->loadStationName();
 
     QList<QScreen *> screen = QGuiApplication::screens();
     if (!screen.isEmpty()) {
@@ -54,7 +57,6 @@ int main(int argc, char *argv[])
     nh->getLoginConf();
     nh->checkUpdate();
     nh->leftTicketInit();
-    //w->loginDialog->show();
 #ifdef HAS_CDN
     w->getCdn();
 #endif

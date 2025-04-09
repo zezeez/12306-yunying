@@ -23,7 +23,7 @@
 #define INITDC BASEURL PUBLICNAME "/confirmPassenger/initDc"
 //  获取车站名称/拼音信息
 #define STATIONNAMEURL BASEURL PUBLICNAME "/resources/js/framework/station_name.js?station_version="
-#define STATIONNAMEVERSION "1.9341"
+#define STATIONNAMEVERSION "1.9343"
 
 #define QUERYTICKETBASEURL BASEURL PUBLICNAME "/leftTicket/queryE"
 //#define USERAGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36"
@@ -125,6 +125,7 @@
 #define TICKETQUERYSTUDENT "0X00"
 
 // 座位类别
+#define SEATYXYIDENG 'D'  // 优选一等座
 #define SEATYIDENG 'M'  // 一等座
 #define SEATERDENG 'O'  // 二等座
 #define SEATTEDENG 'P'  // 特等座

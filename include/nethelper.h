@@ -229,6 +229,8 @@ private:
     explicit NetHelper(QObject *parent = nullptr);
     NetHelper(const NetHelper &) Q_DECL_EQ_DELETE;
     NetHelper &operator=(const NetHelper rhs) Q_DECL_EQ_DELETE;
+    QString getCommitSeatStr();
+    QString getCommitBedStr();
 
 public:
     QNetworkAccessManager *nam;
@@ -248,6 +250,8 @@ public:
     QString queryLeftTicketUrl;
     QString chooseSeat;
     bool canChooseSeats;
+    bool canChooseBeds;
+    bool isCanChooseMid;
     QVector<int> netStatSample;
     QVector<QString> cdnList;
     QVector<QVector<int>> statSnapshot;

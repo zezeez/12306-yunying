@@ -10,21 +10,6 @@
 #include <QString>
 #include <QVariantMap>
 
-
-enum ESEATTYPEENUM {
-    ESEATSPECIALSEAT = 0,
-    ESEATFIRSTPRISEAT,
-    ESEATSECONDPRISEAT,
-    ESEATADVSOFTCROUCH,
-    ESEATSOFTCROUCH,
-    ESEATSTIRCROUCH,
-    ESEATHARDCROUCH,
-    ESEATSOFTSEAT,
-    ESEATHARDSEAT,
-    ESEATNOSEAT,
-    ESEATTYPEMAX
-};
-
 enum TrainTableColumnEnum {
     ETRAINNOCOL = 0,
     EFROMSTATIONCOL,
@@ -33,11 +18,11 @@ enum TrainTableColumnEnum {
     EARRIVETIMECOL,
     EUSEDTIMECOL,
     ESPECIALSEATCOL,
+    EPRIFIRSTPRISEATCOL,
     EFIRSTPRISEATCOL,
     ESECONDPRISEATCOL,
     EADVSOFTCROUCHCOL,
     ESOFTCROUCHCOL,
-    ESTIRCROUCHCOL,
     EHARDCROUCHCOL,
     ESOFTSEATCOL,
     EHARDSEATCOL,
@@ -45,27 +30,6 @@ enum TrainTableColumnEnum {
     EOTHERCOL,
     EREMARKCOL,
     ETRAINTABLECOLUMNENDTOTAL
-};
-
-static const QStringList trainTableColumnDesc = {
-    "车次",
-    "出发站",
-    "到达站",
-    "出发时间",
-    "到达时间",
-    "用时",
-    "商务/特等",
-    "一等座",
-    "二等座",
-    "高级软卧",
-    "软卧",
-    "动卧",
-    "硬卧",
-    "软座",
-    "硬座",
-    "无座",
-    "其他",
-    "备注"
 };
 
 enum TrainInfoEnum {
@@ -89,20 +53,20 @@ enum TrainInfoEnum {
     ETOSTATIONNO,
     EISSUPPORTCARD,
     ECONTROLLEDTRAINFLAG,
-    EGGNUM,
-    EGRNUM,  // 高级软卧
-    EQTNUM,  // 其他
-    ERWNUM,  // 软卧
-    ERZNUM,  // 软座
-    ETZNUM,  // 特等座
-    EWZNUM,  // 无座
+    EGGNUM,  // GG: "D_优选一等座"
+    EGRNUM,  // GR: "6_高级软卧"
+    EQTNUM,  // QT: "H_其他"
+    ERWNUM,  // RW: "4_软卧"
+    ERZNUM,  // RZ: "2_软座"
+    ETZNUM,  // TZ: "P_特等座"
+    EWZNUM,  // WZ: "1_无座"
     EYBNUM,  //
-    EYWNUM,  // 硬卧
-    EYZNUM,  // 硬座
-    EZENUM,  // 二等座
-    EZYNUM,  // 一等座
-    ESWZNUM,  // 商务座/特等座
-    ESRBNUM,  // 动卧
+    EYWNUM,  // YW: "3_硬卧"
+    EYZNUM,  // YZ: "1_硬座"
+    EZENUM,  // ZE: "O_二等座"
+    EZYNUM,  // ZY: "M_一等座"
+    ESWZNUM,  // SWZ: "9_商务座"
+    ESRRBNUM,  // SRRB: "F_动卧"
     EYPEX,
     ESEATTYPES,
     EEXCHANGETRAINFLAG,
@@ -427,8 +391,6 @@ public:
     {
         uamtk = tk;
     }
-    QString seatTypeToDesc(int idx);
-    enum ESEATTYPEENUM SeatDescToType(QString desc);
 
     struct PassengerInfo setPassengerInfo(QVariantMap &map);
     bool whatsSelect(bool onlyNormal);

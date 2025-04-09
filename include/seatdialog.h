@@ -5,7 +5,8 @@
 #include <QVector>
 #include <QComboBox>
 #include <QLabel>
-#include "completeedit.h"
+#include "customlabel.h"
+#include "bedwidget.h"
 
 class SeatDialog : public QDialog
 {
@@ -15,8 +16,10 @@ public:
     ~SeatDialog();
     void showSeatType(int index);
     void updateSelectedTips();
-    void clearSelected();
+    void clearSelectedSeats();
+    void clearSelectedBeds();
     QString getChoosedSeats(QChar seatType);
+    int getChoosedBeds(enum BedPosition pos);
 
 private:
     QVector<QPair<QChar, QVector<int>>> seatsVec;
@@ -24,6 +27,7 @@ private:
     QVector<QLabel *> seatDescLB;
     QVector<ClickLabel *> seatVCL;
     QVector<bool> seatSelected;
+    BedWidget *bedWidget;
 };
 
 #endif // SEATDIALOG_H

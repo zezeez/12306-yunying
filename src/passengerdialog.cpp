@@ -17,6 +17,7 @@ extern MainWindow *w;
 PassengerDialog::PassengerDialog(QWidget *parent) :
     QDialog(parent)
 {
+    dListWidget = new DoubleListWidget;
 }
 
 PassengerDialog::~PassengerDialog()
@@ -25,95 +26,18 @@ PassengerDialog::~PassengerDialog()
 
 void PassengerDialog::setUp()
 {
-    unSelected = new QListWidget;
-    unSelected->setMinimumWidth(100);
-    selected = new QListWidget;
-    selected->setMinimumWidth(100);
-    QLabel *label = new QLabel(tr("未选中的乘车人："));
-
-    //unSelected->setViewMode(QListWidget::IconMode );
-    //unSelected->setResizeMode(QListWidget::Adjust);
-    //unSelected->setMovement(QListWidget::Static);
-    /*UserData *ud = UserData::instance();
-    struct UserLoginInfo &info = ud->getUserLoginInfo();
-    struct GrabTicketSetting &grabSetting = ud->getGrabTicketSetting();
-    QVector<struct PassengerInfo>::const_iterator it;
-
-    for (it = grabSetting.selectedPassenger.cbegin();
-         it != grabSetting.selectedPassenger.cend(); ++it) {
-        QListWidgetItem *item = new QListWidgetItem(selected);
-        //QStyle::StandardPixmap sp = static_cast<QStyle::StandardPixmap>(i % 57);
-        //item->setData(Qt::DecorationRole, qApp->style()->standardPixmap(sp).scaled(QSize(16,16), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        item->setData(Qt::DisplayRole, QObject::tr("%1").arg(it->passName));
-    }
-    for (it = info.passenger.cbegin();
-         it != info.passenger.cend(); ++it) {
-        if (!grabSetting.selectedPassenger.contains(*it)) {
-            QListWidgetItem *item = new QListWidgetItem(unSelected);
-            //QStyle::StandardPixmap sp = static_cast<QStyle::StandardPixmap>(i % 57);
-            //item->setData(Qt::DecorationRole, qApp->style()->standardPixmap(sp).scaled(QSize(16,16), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-            item->setData(Qt::DisplayRole, QObject::tr("%1").arg(it->passName));
-        }
-    }*/
-
-    unSelected->setCurrentRow(0);
-
-    QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addWidget(label);
-    vLayout->addWidget(unSelected);
-
-    QVBoxLayout *vLayout2 = new QVBoxLayout;
-    vLayout2->addStretch();
-    addSelectedPb = new QPushButton;
-    addSelectedPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_right.png")));
-    connect(addSelectedPb, &QPushButton::clicked, this, &PassengerDialog::setSelectedPassenger);
-    addSelectedPb->setEnabled(unSelected->count() != 0);
-    vLayout2->addWidget(addSelectedPb);
-
-    addUnSelectedPb = new QPushButton;
-    addUnSelectedPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_left.png")));
-    connect(addUnSelectedPb, &QPushButton::clicked, this, &PassengerDialog::setUnselectedPassenger);
-    addUnSelectedPb->setEnabled(selected->count() != 0);
-    vLayout2->addWidget(addUnSelectedPb);
-    vLayout2->addStretch();
-    moveUpSelectedPb = new QPushButton;
-    moveUpSelectedPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_up.png")));
-    connect(moveUpSelectedPb, &QPushButton::clicked, this, &PassengerDialog::moveUpPassenger);
-    vLayout2->addWidget(moveUpSelectedPb);
-    moveDownSelectPb = new QPushButton;
-    moveDownSelectPb->setIcon(QIcon(QStringLiteral(":/icon/images/arrow_down.png")));
-    connect(moveDownSelectPb, &QPushButton::clicked, this, &PassengerDialog::moveDownPassenger);
-    vLayout2->addWidget(moveDownSelectPb);
-    vLayout2->addStretch();
-    addSelectedAllPb = new QPushButton;
-    addSelectedAllPb->setIcon(QIcon(QStringLiteral(":/icon/images/double_arrow_right.png")));
-    connect(addSelectedAllPb, &QPushButton::clicked, this, &PassengerDialog::clearUnSelectedPassenger);
-    addSelectedAllPb->setEnabled(unSelected->count() != 0);
-    vLayout2->addWidget(addSelectedAllPb);
-
-    addUnSelectedAllPb = new QPushButton;
-    addUnSelectedAllPb->setIcon(QIcon(QStringLiteral(":/icon/images/double_arrow_left.png")));
-    connect(addUnSelectedAllPb, &QPushButton::clicked, this, &PassengerDialog::clearSelectedPassenger);
-    addUnSelectedAllPb->setEnabled(selected->count() != 0);
-    vLayout2->addWidget(addUnSelectedAllPb);
-
-    QVBoxLayout *vLayout3 = new QVBoxLayout;
-    label = new QLabel(tr("已选中的乘车人："));
-    vLayout3->addWidget(label);
-    vLayout3->addWidget(selected);
-
-    QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addLayout(vLayout);
-    hLayout->addLayout(vLayout2);
-    hLayout->addLayout(vLayout3);
+    dListWidget->setListMinimumWidth(100);
+    dListWidget->setLeftTitle(tr("未选中的乘车人："));
+    dListWidget->setRightTitle(tr("已选中的乘车人："));
+    connect(dListWidget, &DoubleListWidget::listCountChanged, this, &PassengerDialog::updateSelectedTips);
 
     QVBoxLayout *outvLayout = new QVBoxLayout;
-    outvLayout->addLayout(hLayout);
+    outvLayout->addWidget(dListWidget);
 
     QVBoxLayout *vLayout4 = new QVBoxLayout;
     QButtonGroup *btnGroup = new QButtonGroup;
     QRadioButton *rb;
-    label = new QLabel(QStringLiteral("余票不足时："));
+    QLabel *label = new QLabel(QStringLiteral("余票不足时："));
     vLayout4->addWidget(label);
     rb = new QRadioButton(QStringLiteral("部分提交(按选中乘车人的顺序)"));
     connect(rb, &QRadioButton::toggled, this, [] (bool checked) {
@@ -157,8 +81,6 @@ void PassengerDialog::setUp()
 
     setLayout(outvLayout);
     setWindowTitle(tr("选择乘车人"));
-    //passengerDialog->resize(350, 200);
-    //dialog->exec();
 }
 
 void PassengerDialog::refreshPassengerInfo()
@@ -166,218 +88,47 @@ void PassengerDialog::refreshPassengerInfo()
     NetHelper::instance()->getPassengerInfo();
 }
 
-void PassengerDialog::updateSelectedTips()
+void PassengerDialog::updateSelectedTips(int leftCount, int rightCount)
 {
-    QString tips = tr("已选%1/%2").arg(selected->count()).arg(selected->count() + unSelected->count());
+    QString tips = tr("已选%1/%2").arg(rightCount).arg(leftCount + rightCount);
     w->selectedPassengerTipsLabel->setText(tips);
-    addSelectedPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedPb->setEnabled(selected->count() != 0);
-    addSelectedAllPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedAllPb->setEnabled(selected->count() != 0);
 }
 
 const QList<QString> &PassengerDialog::getSelectedPassenger() const
 {
     static QList<QString> passengerList;
+    const QStringList &slist = dListWidget->rightListContent();
     passengerList.clear();
-    passengerList.resize(selected->count());
-    for (int i = 0; i < selected->count(); i++) {
-        passengerList[i] = selected->item(i)->text().split('(')[0];
+    passengerList.resize(slist.size());
+    for (int i = 0; i < slist.size(); i++) {
+        passengerList[i] = slist[i].split('(')[0];
     }
     return passengerList;
 }
 
 void PassengerDialog::addSelectedPassenger(const QString &passengerName)
 {
-    QList<QListWidgetItem *> itemList = unSelected->findItems(passengerName, Qt::MatchExactly);
-    for (auto &i : itemList) {
-        unSelected->removeItemWidget(i);
-    }
-    selected->addItem(passengerName);
-    selected->setCurrentRow(0);
-    updateSelectedTips();
+    dListWidget->addRightItem(passengerName, Qt::MatchExactly);
 }
 
 void PassengerDialog::addUnSelectedPassenger(const QString &passengerName)
 {
-    QList<QListWidgetItem *> itemList = selected->findItems(passengerName, Qt::MatchExactly);
-    for (auto &i : itemList) {
-        selected->removeItemWidget(i);
-    }
-    unSelected->addItem(passengerName);
-    unSelected->setCurrentRow(0);
-    updateSelectedTips();
-}
-
-void PassengerDialog::setSelectedPassenger()
-{
-    UserData *ud = UserData::instance();
-    struct GrabTicketSetting &grabSetting = ud->getGrabTicketSetting();
-
-    QVector<struct PassengerInfo>::const_iterator it;
-    QListWidgetItem *item = unSelected->currentItem();
-    if (item) {
-        QList<QListWidgetItem *> list = selected->findItems(item->text(), Qt::MatchExactly);
-        if (list.isEmpty()) {
-            for (it = ud->passenger.cbegin(); it != ud->passenger.cend(); ++it) {
-                if (!it->passName.compare(item->text())) {
-                    if (!grabSetting.selectedPassenger.contains(*it)) {
-                        grabSetting.selectedPassenger.push_back(*it);
-                    }
-                    break;
-                }
-            }
-            if (it == ud->passenger.cend() && !grabSetting.selectedDjPassenger.isEmpty()) {
-                for (it = ud->djPassenger.cbegin(); it != ud->djPassenger.cend(); ++it) {
-                    if (!it->passName.compare(item->text())) {
-                        if (!grabSetting.selectedDjPassenger.contains(*it)) {
-                            grabSetting.selectedDjPassenger.push_back(*it);
-                        }
-                        break;
-                    }
-                }
-            }
-
-            //QListWidgetItem *item2 = new QListWidgetItem(selected);
-            //item2->setData(Qt::DisplayRole, QObject::tr("%1").arg(item->text()));
-            //selected->setCurrentItem(unSelected->takeItem(unSelected->currentRow()));
-            //delete unSelected->takeItem(unSelected->currentRow());
-            QListWidgetItem *item = unSelected->takeItem(unSelected->currentRow());
-            selected->addItem(item);
-            selected->setCurrentItem(item);
-        }
-    }
-
-    updateSelectedTips();
-}
-
-void PassengerDialog::setUnselectedPassenger()
-{
-    UserData *ud = UserData::instance();
-    struct GrabTicketSetting &grabSetting = ud->getGrabTicketSetting();
-
-    QVector<struct PassengerInfo>::const_iterator it;
-    QListWidgetItem *item = selected->currentItem();
-
-    if (item) {
-        for (it = ud->passenger.cbegin(); it != ud->passenger.cend(); ++it) {
-            if (!it->passName.compare(item->text())) {
-                if (grabSetting.selectedPassenger.contains(*it)) {
-                    grabSetting.selectedPassenger.removeOne(*it);
-                }
-                break;
-            }
-        }
-        for (it = ud->djPassenger.cbegin(); it != ud->djPassenger.cend(); ++it) {
-            if (!it->passName.compare(item->text())) {
-                if (grabSetting.selectedDjPassenger.contains(*it)) {
-                    grabSetting.selectedDjPassenger.removeOne(*it);
-                }
-                break;
-            }
-        }
-        //QListWidgetItem *item2 = new QListWidgetItem(unSelected);
-        //item2->setData(Qt::DisplayRole, QObject::tr("%1").arg(item->text()));
-        //unSelected->setCurrentItem(selected->takeItem(selected->currentRow()));
-        //delete selected->takeItem(selected->currentRow());
-        QListWidgetItem *item = selected->takeItem(selected->currentRow());
-        unSelected->addItem(item);
-        unSelected->setCurrentItem(item);
-    }
-
-    updateSelectedTips();
-}
-
-void PassengerDialog::clearUnSelectedPassenger()
-{
-    if (unSelected->count()) {
-        unSelected->setCurrentRow(unSelected->count() - 1);
-        while (unSelected->count()) {
-            QListWidgetItem *item = unSelected->takeItem(unSelected->currentRow());
-            selected->addItem(item);
-        }
-        selected->setCurrentRow(0);
-        updateSelectedTips();
-    }
-}
-
-void PassengerDialog::clearSelectedPassenger()
-{
-    if (selected->count()) {
-        selected->setCurrentRow(selected->count() - 1);
-        while (selected->count()) {
-            QListWidgetItem *item = selected->takeItem(selected->currentRow());
-            unSelected->addItem(item);
-        }
-        unSelected->setCurrentRow(0);
-        updateSelectedTips();
-    }
+    dListWidget->addLeftItem(passengerName, Qt::MatchExactly);
 }
 
 void PassengerDialog::clearPassenger()
 {
-    if (selected->count()) {
-        selected->setCurrentRow(selected->count() - 1);
-        while (selected->count()) {
-            QListWidgetItem *item = selected->takeItem(selected->currentRow());
-            delete item;
-        }
-        updateSelectedTips();
-    }
-    if (unSelected->count()) {
-        unSelected->setCurrentRow(unSelected->count() - 1);
-        while (unSelected->count()) {
-            QListWidgetItem *item = unSelected->takeItem(unSelected->currentRow());
-            delete item;
-        }
-        updateSelectedTips();
-    }
-}
-
-void PassengerDialog::moveUpPassenger()
-{
-    QListWidgetItem *item = selected->currentItem();
-    if (item) {
-        int row = selected->row(item);
-        if (row > 0) {
-            selected->takeItem(row);
-            selected->insertItem(row - 1, item);
-            selected->setCurrentItem(item);
-        }
-    }
-}
-
-void PassengerDialog::moveDownPassenger()
-{
-    QListWidgetItem *item = selected->currentItem();
-    if (item) {
-        int row = selected->row(item);
-        if (row < selected->count() - 1) {
-            selected->takeItem(row);
-            selected->insertItem(row + 1, item);
-            selected->setCurrentItem(item);
-        }
-    }
+    dListWidget->clearList();
 }
 
 void PassengerDialog::enterGrabTicketMode()
 {
-    addSelectedPb->setEnabled(false);
-    addUnSelectedPb->setEnabled(false);
-    addSelectedAllPb->setEnabled(false);
-    addUnSelectedAllPb->setEnabled(false);
-    moveUpSelectedPb->setEnabled(false);
-    moveDownSelectPb->setEnabled(false);
+    dListWidget->setDisableEdit();
     refreshPassengerPb->setEnabled(false);
 }
 
 void PassengerDialog::exitGrabTicketMode()
 {
-    addSelectedPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedPb->setEnabled(selected->count() != 0);
-    addSelectedAllPb->setEnabled(unSelected->count() != 0);
-    addUnSelectedAllPb->setEnabled(selected->count() != 0);
-    moveUpSelectedPb->setEnabled(true);
-    moveDownSelectPb->setEnabled(true);
+    dListWidget->setEnableEdit();
     refreshPassengerPb->setEnabled(true);
 }
