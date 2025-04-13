@@ -230,11 +230,14 @@ void TrainNoDialog::setUp()
 void TrainNoDialog::updateSelectedTips(int leftCount, int rightCount)
 {
     QString tips = tr("已选%1/%2").arg(rightCount).arg(leftCount + rightCount);
+    QStringList part;
+
     w->selectedTrainTipsLabel->setText(tips);
     selectedTrainSet.clear();
-    const QStringList &slist = dListWidget->rightListContent();
-    for (const QString &s : slist) {
-        selectedTrainSet.insert(s);
+    const QStringList &trainList = dListWidget->rightListContent();
+    for (const QString &train : trainList) {
+        part = train.split(' ');
+        selectedTrainSet.insert(part[0] + ' ' + part[1] + ' ' + part[2]);
     }
 }
 

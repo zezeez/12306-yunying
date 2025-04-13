@@ -562,11 +562,15 @@ QVector<std::pair<int, int>> Analysis::trainSelectSeatType(int trainNoIdx)
             sufficientSeatTypePrioSelectSeatType(selectSeatType, seatVec, trainNoIdx, passengerList.size());
         } else if (ud->grabSetting.seatTypePrio.strictSeatTypePrio) {
             int remain = passengerList.size();
+            w->formatOutput(_("正在选择席别，使用规则：按选中席别的顺序提交"));
             for (int j = 0; j < selectSeatTypeSize; j++) {
                 int ticketNum = trainTicketInfo[trainNoIdx][selectSeatType[j]];
                 if (ticketNum > 0) {
                     seatVec.push_back(std::pair(selectSeatType[j], ticketNum > remain ?
                                                                        remain : ticketNum));
+                    w->formatOutput(_("已选择席别%1, 余票%2").arg(ticketIndexToseatTypeName(selectSeatType[j]),
+                                                                ticketNum == 100 ?
+                                                                _("充足") : _("%1张").arg(ticketNum)));
                     remain -= ticketNum;
                     if (remain <= 0) {
                         break;

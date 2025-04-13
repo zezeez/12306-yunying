@@ -492,7 +492,7 @@ void MainWindow::setRemainTicketColor(QString &remain, QStandardItem *item, bool
         item->setForeground(Qt::black);
     else {
         item->setForeground(QBrush(QColor(238, 154, 73)));
-        if (!remain.compare(_("候补")) && !canCandidate)
+        if (!canCandidate && !remain.compare(_("候补")))
             item->setForeground(QBrush(QColor(190, 190, 190)));
     }
 }
