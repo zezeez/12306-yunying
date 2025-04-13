@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QLineEdit>
+#include "completeedit.h"
 
 class SellTimeQueryDialog : public QDialog
 {
@@ -19,11 +20,12 @@ public:
     void queryLcTime();
     void queryLcTimeReply(QVariantMap &varMap);
     void setQueryText(const QString &text);
+    void setCompleter(InputCompleter *ic);
 
 private:
     QLabel *msgLabel;
     QLabel *dispLabel;
-    QLineEdit *queryStaLe;
+    CompleteEdit *queryStaLe;
     QMap<QString, QString> cityStaName;
 };
 

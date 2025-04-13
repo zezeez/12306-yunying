@@ -24,101 +24,91 @@ enum stationInfoEnum {
 #define STATIONPOS(x, y) (STATIONL1POS(x) + \
                           STATIONL2POS(y))
 
-InputCompleter::InputCompleter(QObject *parent) :
-    QCompleter(parent), m_model()
+InputCompleterData::InputCompleterData()
 {
-    setModel(&m_model);
-
     stationNameIndexLevel1.fill(-1, STATIONL1COUNT);
     stationNameIndexLevel2.fill(-1, STATIONL2COUNT);
     stationNameData.resize(STATIONSIZE);
-    stationNameData.fill(nullptr, STATIONSIZE);
 
     stationFullPinYinIndexLevel1.fill(-1, STATIONL1COUNT);
     stationFullPinYinIndexLevel2.fill(-1, STATIONL2COUNT);
     stationFullPinYinData.resize(STATIONSIZE);
-    stationFullPinYinData.fill(nullptr, STATIONSIZE);
 
     stationSimplePinYinIndexLevel1.fill(-1, STATIONL1COUNT);
     stationSimplePinYinIndexLevel2.fill(-1, STATIONL2COUNT);
     stationSimplePinYinData.resize(STATIONSIZE);
-    stationSimplePinYinData.fill(nullptr, STATIONSIZE);
+}
+
+InputCompleterData::~InputCompleterData()
+{
+
+}
+
+void InputCompleterData::addStationName(const QByteArray &staName, const QByteArray &staFullPinYin)
+{
+    int idx1 = 0, idx2 = 0;
+    if (staName.length() > 1) {
+        idx2 = static_cast<unsigned char>(staName[1]);
+    }
+    idx1 = static_cast<unsigned char>(staName[0]);
+    stationNameIndexLevel1[idx1] = idx1;
+    stationNameIndexLevel2[idx2] = idx2;
+    if (!stationNameData[STATIONPOS(idx1, idx2)]) {
+        stationNameData[STATIONPOS(idx1, idx2)] = new stationData;
+    }
+    stationNameData[STATIONPOS(idx1, idx2)]->addData(
+        QPair<QByteArray, QString>(staName, staName + _(" ") + staFullPinYin));
+}
+
+void InputCompleterData::addStationFullPinYin(const QByteArray &staName, const QByteArray &staFullPinYin)
+{
+    int idx1 = 0, idx2 = 0;
+    if (staFullPinYin.length() > 1) {
+        idx2 = static_cast<unsigned char>(staFullPinYin[1]);
+    }
+    idx1 = static_cast<unsigned char>(staFullPinYin[0]);
+    stationFullPinYinIndexLevel1[idx1] = idx1;
+    stationFullPinYinIndexLevel2[idx2] = idx2;
+    if (!stationFullPinYinData[STATIONPOS(idx1, idx2)]) {
+        stationFullPinYinData[STATIONPOS(idx1, idx2)] = new stationData;
+    }
+    stationFullPinYinData[STATIONPOS(idx1, idx2)]->addData(
+        QPair<QByteArray, QString>(staFullPinYin, staName + _(" ") + staFullPinYin));
+}
+
+void InputCompleterData::addStationSimplePinYin(const QByteArray &staName,
+                                            const QByteArray &staSimplePinYin, const QByteArray &staFullPinYin)
+{
+    int idx1 = 0, idx2 = 0;
+    if (staSimplePinYin.length() > 1) {
+        idx2 = static_cast<unsigned char>(staSimplePinYin[1]);
+    }
+    idx1 = static_cast<unsigned char>(staSimplePinYin[0]);
+    stationSimplePinYinIndexLevel1[idx1] = idx1;
+    stationSimplePinYinIndexLevel2[idx2] = idx2;
+    if (!stationSimplePinYinData[STATIONPOS(idx1, idx2)]) {
+        stationSimplePinYinData[STATIONPOS(idx1, idx2)] = new stationData;
+    }
+    stationSimplePinYinData[STATIONPOS(idx1, idx2)]->addData(
+        QPair<QByteArray, QString>(staSimplePinYin, staName + _(" ") + staFullPinYin));
+}
+
+InputCompleter::InputCompleter(QObject *parent) :
+    QCompleter(parent), m_model()
+{
+    setModel(&m_model);
 
     isAppend = false;
 }
 
 InputCompleter::~InputCompleter()
 {
-    for (QVector<QPair<QByteArray, QString>> *d : stationNameData) {
-        delete d;
-    }
-    for (QVector<QPair<QByteArray, QString>> *d : stationFullPinYinData) {
-        delete d;
-    }
-    for (QVector<QPair<QByteArray, QString>> *d : stationSimplePinYinData) {
-        delete d;
-    }
+
 }
 
 InputCompleter &InputCompleter::operator=(const InputCompleter &other)
 {
-    int i;
-    for (i = 0; i < other.stationNameIndexLevel1.size(); i++) {
-        stationNameIndexLevel1[i] = other.stationNameIndexLevel1[i];
-    }
-    for (i = 0; i < other.stationNameIndexLevel2.size(); i++) {
-        stationNameIndexLevel2[i] = other.stationNameIndexLevel2[i];
-    }
-    for (i = 0; i < other.stationNameData.size(); i++) {
-        if (other.stationNameData[i]) {
-            if (!stationNameData[i]) {
-                stationNameData[i] = new QVector<QPair<QByteArray, QString>>;
-            }
-            *stationNameData[i] = *other.stationNameData[i];
-        } else {
-            delete stationNameData[i];
-            stationNameData[i] = nullptr;
-        }
-    }
-
-    for (i = 0; i < other.stationFullPinYinIndexLevel1.size(); i++) {
-        stationFullPinYinIndexLevel1[i] = other.stationFullPinYinIndexLevel1[i];
-    }
-    for (i = 0; i < other.stationFullPinYinIndexLevel2.size(); i++) {
-        stationFullPinYinIndexLevel2[i] = other.stationFullPinYinIndexLevel2[i];
-    }
-    for (i = 0; i < other.stationFullPinYinData.size(); i++) {
-        //stationFullPinYinData[i] = other.stationFullPinYinData[i];
-        if (other.stationFullPinYinData[i]) {
-            if (!stationFullPinYinData[i]) {
-                stationFullPinYinData[i] = new QVector<QPair<QByteArray, QString>>;
-            }
-            *stationFullPinYinData[i] = *other.stationFullPinYinData[i];
-        } else {
-            delete stationFullPinYinData[i];
-            stationFullPinYinData[i] = nullptr;
-        }
-    }
-
-    for (i = 0; i < other.stationSimplePinYinIndexLevel1.size(); i++) {
-        stationSimplePinYinIndexLevel1[i] = other.stationSimplePinYinIndexLevel1[i];
-    }
-    for (i = 0; i < other.stationSimplePinYinIndexLevel2.size(); i++) {
-        stationSimplePinYinIndexLevel2[i] = other.stationSimplePinYinIndexLevel2[i];
-    }
-    for (i = 0; i < other.stationSimplePinYinData.size(); i++) {
-        //stationSimplePinYinData[i] = other.stationSimplePinYinData[i];
-        if (other.stationSimplePinYinData[i]) {
-            if (!stationSimplePinYinData[i]) {
-                stationSimplePinYinData[i] = new QVector<QPair<QByteArray, QString>>;
-            }
-            *stationSimplePinYinData[i] = *other.stationSimplePinYinData[i];
-        } else {
-            delete stationSimplePinYinData[i];
-            stationSimplePinYinData[i] = nullptr;
-        }
-    }
-
+    d = other.d;
     keyWordStack = other.keyWordStack;
     m_word = other.m_word;
     isAppend = other.isAppend;
@@ -170,9 +160,9 @@ void InputCompleter::setStationData(const QByteArray &nameText)
                 if (!staName.isEmpty() && !staCode.isEmpty() &&
                     !staFullPinYin.isEmpty() && !staSimplePinYin.isEmpty() &&
                     !staCode.isEmpty()) {
-                    addStationName(staName, staFullPinYin);
-                    addStationFullPinYin(staName, staFullPinYin);
-                    addStationSimplePinYin(staName, staSimplePinYin, staFullPinYin);
+                    d.addStationName(staName, staFullPinYin);
+                    d.addStationFullPinYin(staName, staFullPinYin);
+                    d.addStationSimplePinYin(staName, staSimplePinYin, staFullPinYin);
                     ud->setStationCode(staName, staCode);
                 }
                 sectionIndex = 0;
@@ -184,61 +174,14 @@ void InputCompleter::setStationData(const QByteArray &nameText)
     }
     if (!staName.isEmpty() && !staCode.isEmpty() &&
         !staFullPinYin.isEmpty() && !staSimplePinYin.isEmpty()) {
-        addStationName(staName, staFullPinYin);
-        addStationFullPinYin(staName, staFullPinYin);
-        addStationSimplePinYin(staName, staSimplePinYin, staFullPinYin);
+        d.addStationName(staName, staFullPinYin);
+        d.addStationFullPinYin(staName, staFullPinYin);
+        d.addStationSimplePinYin(staName, staSimplePinYin, staFullPinYin);
         ud->setStationCode(staName, staCode);
     }
 }
 
-void InputCompleter::addStationName(const QByteArray &staName, const QByteArray &staFullPinYin)
-{
-    int idx1 = 0, idx2 = 0;
-    if (staName.length() > 1) {
-        idx2 = static_cast<unsigned char>(staName[1]);
-    }
-    idx1 = static_cast<unsigned char>(staName[0]);
-    stationNameIndexLevel1[idx1] = idx1;
-    stationNameIndexLevel2[idx2] = idx2;
-    if (!stationNameData[STATIONPOS(idx1, idx2)]) {
-        stationNameData[STATIONPOS(idx1, idx2)] = new QVector<QPair<QByteArray, QString>>;
-    }
-    stationNameData[STATIONPOS(idx1, idx2)]->append(
-        QPair<QByteArray, QString>(staName, staName + _(" ") + staFullPinYin));
-}
 
-void InputCompleter::addStationFullPinYin(const QByteArray &staName, const QByteArray &staFullPinYin)
-{
-    int idx1 = 0, idx2 = 0;
-    if (staFullPinYin.length() > 1) {
-        idx2 = static_cast<unsigned char>(staFullPinYin[1]);
-    }
-    idx1 = static_cast<unsigned char>(staFullPinYin[0]);
-    stationFullPinYinIndexLevel1[idx1] = idx1;
-    stationFullPinYinIndexLevel2[idx2] = idx2;
-    if (!stationFullPinYinData[STATIONPOS(idx1, idx2)]) {
-        stationFullPinYinData[STATIONPOS(idx1, idx2)] = new QVector<QPair<QByteArray, QString>>;
-    }
-    stationFullPinYinData[STATIONPOS(idx1, idx2)]->append(
-        QPair<QByteArray, QString>(staFullPinYin, staName + _(" ") + staFullPinYin));
-}
-
-void InputCompleter::addStationSimplePinYin(const QByteArray &staName,
-                                            const QByteArray &staSimplePinYin, const QByteArray &staFullPinYin)
-{
-    int idx1 = 0, idx2 = 0;
-    if (staSimplePinYin.length() > 1) {
-        idx2 = static_cast<unsigned char>(staSimplePinYin[1]);
-    }
-    idx1 = static_cast<unsigned char>(staSimplePinYin[0]);
-    stationSimplePinYinIndexLevel1[idx1] = idx1;
-    stationSimplePinYinIndexLevel2[idx2] = idx2;
-    if (!stationSimplePinYinData[STATIONPOS(idx1, idx2)]) {
-        stationSimplePinYinData[STATIONPOS(idx1, idx2)] = new QVector<QPair<QByteArray, QString>>;
-    }
-    stationSimplePinYinData[STATIONPOS(idx1, idx2)]->append(
-        QPair<QByteArray, QString>(staSimplePinYin, staName + _(" ") + staFullPinYin));
-}
 
 void InputCompleter::metaFilter(const QByteArray &word,
                                 QVector<QPair<QByteArray, QString>> &meta,
@@ -251,22 +194,22 @@ void InputCompleter::metaFilter(const QByteArray &word,
 
     if (word.size() > 0) {
         w0 = word[0];
-        idx11 = stationSimplePinYinIndexLevel1[w0];
-        idx21 = stationFullPinYinIndexLevel1[w0];
-        idx31 = stationNameIndexLevel1[w0];
+        idx11 = d.stationSimplePinYinIndexLevel1[w0];
+        idx21 = d.stationFullPinYinIndexLevel1[w0];
+        idx31 = d.stationNameIndexLevel1[w0];
     }
 
     if (word.size() > 1) {
         w1 = word[1];
-        idx12 = stationSimplePinYinIndexLevel2[w1];
-        idx22 = stationFullPinYinIndexLevel2[w1];
-        idx32 = stationNameIndexLevel2[w1];
+        idx12 = d.stationSimplePinYinIndexLevel2[w1];
+        idx22 = d.stationFullPinYinIndexLevel2[w1];
+        idx32 = d.stationNameIndexLevel2[w1];
     }
 
-    const QVector<QVector<QVector<QPair<QByteArray, QString>> *>> &v = {
-        stationSimplePinYinData,
-        stationFullPinYinData,
-        stationNameData
+    const QVector<QVector<QSharedDataPointer<stationData>>> &v = {
+        d.stationSimplePinYinData,
+        d.stationFullPinYinData,
+        d.stationNameData
     };
     QVector<int> idx1 = { idx11, idx21, idx31 };
     QVector<int> idx2 = { idx12, idx22, idx32 };
@@ -276,19 +219,19 @@ void InputCompleter::metaFilter(const QByteArray &word,
         if (idx1[i] != -1) {
             if (idx2[i] == -1) {
                 basePos = STATIONL1POS(idx1[i]);
-                for (idx = 0; idx < 256; idx++) {
+                for (idx = 0; idx < STATIONL2COUNT; idx++) {
                     if (v[i][basePos +
-                              STATIONL2POS(idx)]) {
-                        for (auto &d : *v[i][basePos +
-                                            STATIONL2POS(idx)]) {
+                              STATIONL2POS(idx)].constData()) {
+                        for (const QPair<QByteArray, QString> &d : v[i].at(basePos +
+                                STATIONL2POS(idx))->data()) {
                             result.append(d.second);
                         }
                     }
                 }
             } else {
-                if (v[i][STATIONPOS(idx1[i], idx2[i])]) {
-                    meta.append(*v[i][STATIONPOS(idx1[i], idx2[i])]);
-                    for (auto &d : *v[i][STATIONPOS(idx1[i], idx2[i])]) {
+                if (v[i].at(STATIONPOS(idx1[i], idx2[i])).constData()) {
+                    meta.append(v[i].at(STATIONPOS(idx1[i], idx2[i]))->data());
+                    for (const QPair<QByteArray, QString> &d : meta) {
                         result.append(d.second);
                     }
                 }

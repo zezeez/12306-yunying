@@ -1069,7 +1069,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
 
 void MainWindow::setStationNameCompleter(const QByteArray &nameText)
 {
-    InputCompleter *ic, *ic2;
+    InputCompleter *ic, *ic2, *ic3;
     UserData *ud = UserData::instance();
     UserConfig &uc = ud->getUserConfig();
 
@@ -1102,6 +1102,17 @@ void MainWindow::setStationNameCompleter(const QByteArray &nameText)
     if (!uc.staToName.isEmpty() && uc.staToCode.isEmpty()) {
         uc.staToCode = ud->getStaCode()->value(uc.staToName);
     }
+    ic3 = new InputCompleter(ic);
+    *ic3 = *ic;
+    ic3->setCaseSensitivity((Qt::CaseInsensitive));
+    selltimeDialog->setCompleter(ic3);
+    ic3->popup()->setStyleSheet("background-color: #F5F5F5;\
+                                color: #000000;\
+                                border: 1px solid #BEBEBE;\
+                                border-radius: 5px;\
+                                padding: 2px 2px 2px 2px;\
+                                min-width: 8px;\
+                                font: 13px \"Arial\";");
 }
 
 bool MainWindow::hasStationNameCompleter()
