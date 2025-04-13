@@ -13,7 +13,7 @@ QMainWindow::separator:hover {
 }
 
 QPushButton {
-  background-color: #CCE5FF;
+  background-color: #d0ebff;
   border-style: outset;
   border-width: 4px;
   border-radius: 8px;
@@ -22,10 +22,10 @@ QPushButton {
   min-width: 4em;
   /*min-height: 18px;*/
   padding: 2px;
-  color: #1874CD;
+  color: #1864ab;
 }
 QPushButton:hover {
-  background-color: #B0C4DE;
+  background-color: #a5d8ff;
   border-color: #90EE90;
 }
 QPushButton:disabled {
@@ -36,12 +36,12 @@ QLineEdit {
   border: 2px solid gray;
   border-radius: 10px;
   padding: 0 8px;
-  background: #F0FFFF;
+  background: #e6fcf5;
   selection-background-color: darkgray;
 }
 
 QLineEdit:hover,focus {
-    background-color: #D6EAF8;
+    background-color: #c3fae8;
     border-color: #66CDAA;
 }
 
@@ -142,7 +142,7 @@ QMenu::item {
 QMenu::item:selected {
   /*border-color: darkblue;*/
   /*background: rgba(100, 100, 100, 150);*/
-  background-color: #99CCFF;
+  background-color: #87CEFA;
 }
 
 QMenu::icon:checked { /* appearance of a 'checked' icon */
@@ -190,13 +190,13 @@ QMenuBar::item:pressed {
 QDateEdit {
   spacing: 3px;
   padding: 1px 4px;
-  background: #A3E4D7;
+  background: #F0F2EC;
   border: 2px;
   border-radius: 8px;
 }
 
 QDateEdit:hover,focus {
-    background-color: #7DCEA0
+    background-color: #DAD7D0
 }
 
 QDateEdit:disabled {

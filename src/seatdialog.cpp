@@ -7,6 +7,7 @@
 #include "passengerdialog.h"
 
 #define _ QStringLiteral
+#define SEATTYPEMAX 4
 
 extern MainWindow *w;
 
@@ -53,7 +54,7 @@ SeatDialog::SeatDialog(QWidget *parent) :
         connect(seatVCL[i], &ClickLabel::clicked, this, [=] () {
             QPixmap px;
             int index = seatTypeCB->currentIndex();
-            Q_ASSERT(index < 4);
+            Q_ASSERT(index < SEATTYPEMAX);
             seatSelected[index * 10 + i] = !seatSelected[index * 10 + i];
             // 0-9 一等座
             // 10-19 二等座
@@ -252,7 +253,7 @@ void SeatDialog::showSeatType(int index)
 void SeatDialog::updateSelectedTips()
 {
     int max = 0, t = 0;
-    for (int i = 0; i < 4; i ++) {
+    for (int i = 0; i < SEATTYPEMAX; i ++) {
         t = 0;
         for (int j = 0; j < 10; j++) {
             t += seatSelected[i * 10 + j];
@@ -300,6 +301,7 @@ QString SeatDialog::getChoosedSeats(QChar seatType)
         _("2F"),
     };
     QString selectedSeat;
+
     switch (c) {
     case 'M':
         for (int i = 0; i < 10; i++) {

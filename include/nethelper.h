@@ -136,7 +136,7 @@ public:
     void resultOrderForDcQueueReply(QNetworkReply *reply);
     void getStationNameTxt();
     void getStationNameTxtReply(QNetworkReply *);
-    void saveStationNameFile(const QByteArray &nameText);
+    void saveStationNameFile(const QString &fileName, const QByteArray &text);
     void mayFrozenCurrentTrain(const QString &dispMsg);
     bool queryFrozenTrain(const QString &trainDesc);
     void grabTicketSuccess();

@@ -74,10 +74,14 @@ QString getAppDataPath()
 {
     QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir dir;
+
     if (!dir.exists(dataPath)) {
         if (!dir.mkpath(dataPath)) {
             qWarning() << "Could not create data directory:" << dataPath;
-            return "";
+            dataPath = _("./data");
+            if (!dir.exists(dataPath) && !dir.mkpath(dataPath)) {
+                return ".";
+            }
         }
     }
     return dataPath;
@@ -87,10 +91,14 @@ QString getAppCachePath()
 {
     QString cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     QDir dir;
+
     if (!dir.exists(cachePath)) {
         if (!dir.mkpath(cachePath)) {
             qWarning() << "Could not create data directory:" << cachePath;
-            return "";
+            cachePath = _("./cache");
+            if (!dir.exists(cachePath) && !dir.mkpath(cachePath)) {
+                return ".";
+            }
         }
     }
     return cachePath;

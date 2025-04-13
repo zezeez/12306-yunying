@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     hLayout->addWidget(label = new QLabel(tr("出发站: ")));
     label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     hLayout->addWidget(fromStationLe = new CompleteEdit);
-    fromStationLe->setPlaceholderText(_("简拼/全拼"));
+    fromStationLe->setPlaceholderText(_("简拼/全拼/汉字"));
     fromStationLe->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     fromStationLe->setMaximumWidth(120);
     connect(fromStationLe, &CompleteEdit::editingFinished, this, &MainWindow::userStartStationChanged);
@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     hLayout->addWidget(label = new QLabel(tr("到达站: ")));
     label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     hLayout->addWidget(toStationLe = new CompleteEdit);
-    toStationLe->setPlaceholderText(_("简拼/全拼"));
+    toStationLe->setPlaceholderText(_("简拼/全拼/汉字"));
     toStationLe->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     toStationLe->setMaximumWidth(120);
     connect(toStationLe, &CompleteEdit::editingFinished, this, &MainWindow::userEndStationChanged);
@@ -793,8 +793,8 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
             model->setItem(itemIdx, ETOSTATIONCOL, item = new QStandardItem);
             item->setTextAlignment(Qt::AlignCenter);
             item->setToolTip(toStationName);
-            item->setFont(QFont("Times", 10, QFont::Black));
-            item->setForeground(QBrush(QColor(99, 184, 255)));
+            /*item->setFont(QFont("Times", 10, QFont::Black));
+            item->setForeground(QBrush(QColor(99, 184, 255)));*/
         }
         if (item->text() != toStationName) {
             item->setText(toStationName);
@@ -985,7 +985,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                 } else {
                     // 其他
                     if (dd < 3000) {
-                        if (tableSeatTypeItems.size() > 10 &&
+                        if (tableSeatTypeItems.size() > 11 &&
                             tableSeatTypeItems[11]->text() != _("--")) {
                             tableSeatTypeItems[11]->setToolTip(_("%1").arg(price2));
                             tableSeatTypeItems[11]->setData(price2, Qt::ToolTipRole);
@@ -998,7 +998,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                 }
                 // 无座
                 if (dd >= 3000) {
-                    if (tableSeatTypeItems.size() > 9 &&
+                    if (tableSeatTypeItems.size() > 10 &&
                         tableSeatTypeItems[10]->text() != _("--")) {
                         tableSeatTypeItems[10]->setToolTip(_("%1").arg(price2));
                         tableSeatTypeItems[10]->setData(price2, Qt::ToolTipRole);
@@ -1037,10 +1037,8 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
         fromStationName = stationMap.value(trainInfo[EFROMSTATIONTELECODE]).toString();
         toStationName = stationMap.value(trainInfo[ETOSTATIONTELECODE]).toString();
         model->setItem(itemIdx, EFROMSTATIONCOL, item = new QStandardItem);
-        //item->setTextAlignment(Qt::AlignCenter);
         item->setToolTip(fromStationName);
         model->setItem(itemIdx, ETOSTATIONCOL, item = new QStandardItem);
-        //item->setTextAlignment(Qt::AlignCenter);
         item->setToolTip(toStationName);
         for (int k = ESTARTTIMECOL; k < EREMARKCOL; k++) {
             model->setItem(itemIdx, k, item = new QStandardItem(_("--")));

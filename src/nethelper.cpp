@@ -31,7 +31,7 @@
 #define _ QStringLiteral
 
 extern MainWindow *w;
-static QString station_version = _("1.9343");
+static QString station_version = STATIONNAMEVERSION;
 
 void ReqParam::put(const QString &key, const QString &value)
 {
@@ -484,7 +484,7 @@ void NetHelper::leftTicketInitReply(QNetworkReply *reply)
         }
     }
 
-    QFile f("./station_name_" + station_version + ".txt");
+    QFile f(STATIONNAMEFILE);
     if (!f.exists()) {
         getStationNameTxt();
     } else {
@@ -1635,7 +1635,6 @@ QString NetHelper::getCommitSeatStr()
                 break;
             }
         }
-        QString selectedSeats;
         if (i == ud->submitTicketInfo.submitSeatType.size() && chooseSeat.contains(isSame)) {
             selectedSeats = w->seatDialog->getChoosedSeats(isSame);
             if (selectedSeats.size() > ud->submitTicketInfo.submitSeatType.size() * 2) {
@@ -1654,10 +1653,10 @@ QString NetHelper::getCommitSeatStr()
                 }
             }
         } else {
-            w->formatOutput(_("本次提交暂不支持选座，将由系统随机分配座位"));
+            w->formatOutput(_("本次提交暂不支持选座，如已选座，将忽略"));
         }
     } else {
-        w->formatOutput(_("本次列车暂不支持选座，将由系统随机分配座位"));
+        w->formatOutput(_("本次列车暂不支持选座，如已选座，将忽略"));
     }
 
     return selectedSeats;
@@ -1701,7 +1700,7 @@ QString NetHelper::getCommitBedStr()
             while (bedStr.size() < 3) {
                 bedStr.append('0');
             }
-            msg.append(_("提交选铺下铺"));
+            msg.append(_("提交选铺 下铺"));
             // "000" 下铺中铺上铺
             if (bedStr[1] != '0') {
                 msg.append(_(" 中铺"));
@@ -1996,29 +1995,18 @@ void NetHelper::getStationNameTxtReply(QNetworkReply *reply)
         if (!w->hasStationNameCompleter()) {
             w->setStationNameCompleter(text);
         }
-        if (!QFile::exists("./station_name_" + station_version + ".txt")) {
-            saveStationNameFile(text);
+        if (!QFile::exists(STATIONNAMEFILE)) {
+            saveStationNameFile(STATIONNAMEFILE, text);
         }
     }
 }
 
-void NetHelper::saveStationNameFile(const QByteArray &nameText)
+void NetHelper::saveStationNameFile(const QString &fileName, const QByteArray &text)
 {
-    QString dataPath = getAppDataPath();
-    if (dataPath.isEmpty()) {
-        dataPath = "./data";
-        QDir dir;
-        if (!dir.exists(dataPath)) {
-            if (!dir.mkpath(dataPath)) {
-                qWarning() << "Could not create data directory:" << dataPath;
-                return;
-            }
-        }
-    }
-    QFile file(dataPath + "/station_name_" STATIONNAMEVERSION ".txt");
+    QFile file(fileName);
 
     if (file.open(QFile::WriteOnly)) {
-        file.write(nameText);
+        file.write(text);
         file.close();
     } else {
         qWarning() << "Could not open file " << file.fileName() << " to write";
@@ -3203,18 +3191,6 @@ void NetHelper::payWebBusinessReply(QNetworkReply *reply)
             }
             QString cachePath = getAppCachePath();
 
-            if (cachePath.isEmpty()) {
-                qWarning() << "Could not open application cache path";
-                cachePath = "./cache";
-                QDir dir;
-                if (!dir.exists(cachePath)) {
-                    if (!dir.mkpath(cachePath)) {
-                        qWarning() << "Could not create data directory:" << cachePath;
-                        handlePayError();
-                        return;
-                    }
-                }
-            }
             QTemporaryFile *tempFile = new QTemporaryFile(cachePath + _("/XXXXXX.html"));
             if (tempFile->open()) {
                 int ret = tempFile->write(data);

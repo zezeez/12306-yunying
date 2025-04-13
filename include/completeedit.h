@@ -18,6 +18,7 @@ class InputCompleter : public QCompleter
 public:
     InputCompleter(QObject *parent = nullptr);
     InputCompleter &operator=(const InputCompleter &other);
+    ~InputCompleter();
     void addStationName(const QByteArray &staName, const QByteArray &staFullPinYin);
     void addStationFullPinYin(const QByteArray &staName,
                                               const QByteArray &staFullPinYin);
@@ -42,13 +43,13 @@ private:
     // 二级索引，长度256
     QVector<int> stationNameIndexLevel2;
     // 数据
-    QVector<QVector<QPair<QByteArray, QString>>> stationNameData;
+    QVector<QVector<QPair<QByteArray, QString>> *> stationNameData;
     QVector<int> stationFullPinYinIndexLevel1;
     QVector<int> stationFullPinYinIndexLevel2;
-    QVector<QVector<QPair<QByteArray, QString>>> stationFullPinYinData;
+    QVector<QVector<QPair<QByteArray, QString>> *> stationFullPinYinData;
     QVector<int> stationSimplePinYinIndexLevel1;
     QVector<int> stationSimplePinYinIndexLevel2;
-    QVector<QVector<QPair<QByteArray, QString>>> stationSimplePinYinData;
+    QVector<QVector<QPair<QByteArray, QString>> *> stationSimplePinYinData;
     QStack<QVector<QPair<QByteArray, QString>>> keyWordStack;
     QStringListModel m_model;
     QByteArray m_word;

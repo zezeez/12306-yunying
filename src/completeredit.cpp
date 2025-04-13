@@ -32,14 +32,32 @@ InputCompleter::InputCompleter(QObject *parent) :
     stationNameIndexLevel1.fill(-1, STATIONL1COUNT);
     stationNameIndexLevel2.fill(-1, STATIONL2COUNT);
     stationNameData.resize(STATIONSIZE);
+    stationNameData.fill(nullptr, STATIONSIZE);
+
     stationFullPinYinIndexLevel1.fill(-1, STATIONL1COUNT);
     stationFullPinYinIndexLevel2.fill(-1, STATIONL2COUNT);
     stationFullPinYinData.resize(STATIONSIZE);
+    stationFullPinYinData.fill(nullptr, STATIONSIZE);
+
     stationSimplePinYinIndexLevel1.fill(-1, STATIONL1COUNT);
     stationSimplePinYinIndexLevel2.fill(-1, STATIONL2COUNT);
     stationSimplePinYinData.resize(STATIONSIZE);
+    stationSimplePinYinData.fill(nullptr, STATIONSIZE);
 
     isAppend = false;
+}
+
+InputCompleter::~InputCompleter()
+{
+    for (QVector<QPair<QByteArray, QString>> *d : stationNameData) {
+        delete d;
+    }
+    for (QVector<QPair<QByteArray, QString>> *d : stationFullPinYinData) {
+        delete d;
+    }
+    for (QVector<QPair<QByteArray, QString>> *d : stationSimplePinYinData) {
+        delete d;
+    }
 }
 
 InputCompleter &InputCompleter::operator=(const InputCompleter &other)
@@ -52,7 +70,15 @@ InputCompleter &InputCompleter::operator=(const InputCompleter &other)
         stationNameIndexLevel2[i] = other.stationNameIndexLevel2[i];
     }
     for (i = 0; i < other.stationNameData.size(); i++) {
-        stationNameData[i] = other.stationNameData[i];
+        if (other.stationNameData[i]) {
+            if (!stationNameData[i]) {
+                stationNameData[i] = new QVector<QPair<QByteArray, QString>>;
+            }
+            *stationNameData[i] = *other.stationNameData[i];
+        } else {
+            delete stationNameData[i];
+            stationNameData[i] = nullptr;
+        }
     }
 
     for (i = 0; i < other.stationFullPinYinIndexLevel1.size(); i++) {
@@ -62,7 +88,16 @@ InputCompleter &InputCompleter::operator=(const InputCompleter &other)
         stationFullPinYinIndexLevel2[i] = other.stationFullPinYinIndexLevel2[i];
     }
     for (i = 0; i < other.stationFullPinYinData.size(); i++) {
-        stationFullPinYinData[i] = other.stationFullPinYinData[i];
+        //stationFullPinYinData[i] = other.stationFullPinYinData[i];
+        if (other.stationFullPinYinData[i]) {
+            if (!stationFullPinYinData[i]) {
+                stationFullPinYinData[i] = new QVector<QPair<QByteArray, QString>>;
+            }
+            *stationFullPinYinData[i] = *other.stationFullPinYinData[i];
+        } else {
+            delete stationFullPinYinData[i];
+            stationFullPinYinData[i] = nullptr;
+        }
     }
 
     for (i = 0; i < other.stationSimplePinYinIndexLevel1.size(); i++) {
@@ -72,7 +107,16 @@ InputCompleter &InputCompleter::operator=(const InputCompleter &other)
         stationSimplePinYinIndexLevel2[i] = other.stationSimplePinYinIndexLevel2[i];
     }
     for (i = 0; i < other.stationSimplePinYinData.size(); i++) {
-        stationSimplePinYinData[i] = other.stationSimplePinYinData[i];
+        //stationSimplePinYinData[i] = other.stationSimplePinYinData[i];
+        if (other.stationSimplePinYinData[i]) {
+            if (!stationSimplePinYinData[i]) {
+                stationSimplePinYinData[i] = new QVector<QPair<QByteArray, QString>>;
+            }
+            *stationSimplePinYinData[i] = *other.stationSimplePinYinData[i];
+        } else {
+            delete stationSimplePinYinData[i];
+            stationSimplePinYinData[i] = nullptr;
+        }
     }
 
     keyWordStack = other.keyWordStack;
@@ -156,7 +200,10 @@ void InputCompleter::addStationName(const QByteArray &staName, const QByteArray 
     idx1 = static_cast<unsigned char>(staName[0]);
     stationNameIndexLevel1[idx1] = idx1;
     stationNameIndexLevel2[idx2] = idx2;
-    stationNameData[STATIONPOS(idx1, idx2)].append(
+    if (!stationNameData[STATIONPOS(idx1, idx2)]) {
+        stationNameData[STATIONPOS(idx1, idx2)] = new QVector<QPair<QByteArray, QString>>;
+    }
+    stationNameData[STATIONPOS(idx1, idx2)]->append(
         QPair<QByteArray, QString>(staName, staName + _(" ") + staFullPinYin));
 }
 
@@ -169,7 +216,10 @@ void InputCompleter::addStationFullPinYin(const QByteArray &staName, const QByte
     idx1 = static_cast<unsigned char>(staFullPinYin[0]);
     stationFullPinYinIndexLevel1[idx1] = idx1;
     stationFullPinYinIndexLevel2[idx2] = idx2;
-    stationFullPinYinData[STATIONPOS(idx1, idx2)].append(
+    if (!stationFullPinYinData[STATIONPOS(idx1, idx2)]) {
+        stationFullPinYinData[STATIONPOS(idx1, idx2)] = new QVector<QPair<QByteArray, QString>>;
+    }
+    stationFullPinYinData[STATIONPOS(idx1, idx2)]->append(
         QPair<QByteArray, QString>(staFullPinYin, staName + _(" ") + staFullPinYin));
 }
 
@@ -183,7 +233,10 @@ void InputCompleter::addStationSimplePinYin(const QByteArray &staName,
     idx1 = static_cast<unsigned char>(staSimplePinYin[0]);
     stationSimplePinYinIndexLevel1[idx1] = idx1;
     stationSimplePinYinIndexLevel2[idx2] = idx2;
-    stationSimplePinYinData[STATIONPOS(idx1, idx2)].append(
+    if (!stationSimplePinYinData[STATIONPOS(idx1, idx2)]) {
+        stationSimplePinYinData[STATIONPOS(idx1, idx2)] = new QVector<QPair<QByteArray, QString>>;
+    }
+    stationSimplePinYinData[STATIONPOS(idx1, idx2)]->append(
         QPair<QByteArray, QString>(staSimplePinYin, staName + _(" ") + staFullPinYin));
 }
 
@@ -210,7 +263,7 @@ void InputCompleter::metaFilter(const QByteArray &word,
         idx32 = stationNameIndexLevel2[w1];
     }
 
-    const QVector<QVector<QVector<QPair<QByteArray, QString>>>> &v = {
+    const QVector<QVector<QVector<QPair<QByteArray, QString>> *>> &v = {
         stationSimplePinYinData,
         stationFullPinYinData,
         stationNameData
@@ -224,18 +277,18 @@ void InputCompleter::metaFilter(const QByteArray &word,
             if (idx2[i] == -1) {
                 basePos = STATIONL1POS(idx1[i]);
                 for (idx = 0; idx < 256; idx++) {
-                    if (!v[i][basePos +
-                              STATIONL2POS(idx)].isEmpty()) {
-                        for (auto &d : v[i][basePos +
+                    if (v[i][basePos +
+                              STATIONL2POS(idx)]) {
+                        for (auto &d : *v[i][basePos +
                                             STATIONL2POS(idx)]) {
                             result.append(d.second);
                         }
                     }
                 }
             } else {
-                if (!v[i][STATIONPOS(idx1[i], idx2[i])].isEmpty()) {
-                    meta.append(v[i][STATIONPOS(idx1[i], idx2[i])]);
-                    for (auto &d : v[i][STATIONPOS(idx1[i], idx2[i])]) {
+                if (v[i][STATIONPOS(idx1[i], idx2[i])]) {
+                    meta.append(*v[i][STATIONPOS(idx1[i], idx2[i])]);
+                    for (auto &d : *v[i][STATIONPOS(idx1[i], idx2[i])]) {
                         result.append(d.second);
                     }
                 }
