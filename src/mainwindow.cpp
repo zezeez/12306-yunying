@@ -2013,7 +2013,7 @@ void MainWindow::about()
 
 void MainWindow::onlineHelp()
 {
-    QDesktopServices::openUrl(QUrl(_("https://www.op9.top/help.html")));
+    QDesktopServices::openUrl(QUrl(_("https://op9.top/help.html#quick-start")));
 }
 
 MainWindow::~MainWindow()

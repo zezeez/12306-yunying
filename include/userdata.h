@@ -423,7 +423,7 @@ public:
     struct NotifySetting notifySetting;
     struct PaySetting paySetting;
     QVector<struct PassengerInfo> passenger;  // 旅客信息
-    QVector<struct PassengerInfo> djPassenger;  //  受让人旅客信息
+    QVector<struct PassengerInfo> djPassenger;  //  冻结旅客信息
     QString apptk;
     QString uamtk;
     enum RUNSTATUSE runStatus;

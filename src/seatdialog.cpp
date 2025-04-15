@@ -7,7 +7,7 @@
 #include "passengerdialog.h"
 
 #define _ QStringLiteral
-#define SEATTYPEMAX 4
+#define SEATTYPEMAX 5
 
 extern MainWindow *w;
 
@@ -28,6 +28,7 @@ SeatDialog::SeatDialog(QWidget *parent) :
     QStringList itemDesc = {
         _("一等座"),
         _("二等座"),
+        _("特等座"),
         _("商务座"),
         _("优选一等座")
     };
@@ -37,7 +38,7 @@ SeatDialog::SeatDialog(QWidget *parent) :
 
     seatDescLB.resize(10);
     seatVCL.resize(10);
-    seatSelected.fill(false, 40);
+    seatSelected.fill(false, 50);
 
     hlayout = new QHBoxLayout;
     hlayout->addWidget(seatTypeCB);
@@ -58,8 +59,9 @@ SeatDialog::SeatDialog(QWidget *parent) :
             seatSelected[index * 10 + i] = !seatSelected[index * 10 + i];
             // 0-9 一等座
             // 10-19 二等座
-            // 20-29 商务座
-            // 30-39 优选一等座
+            // 20-29 特等座
+            // 30-39 商务座
+            // 40-49 优选一等座
             if (seatSelected[index * 10 + i]) {
                 px.load(_(":/icon/images/choosed_seat.png"));
                 seatVCL[i]->setPixmap(px);
@@ -93,12 +95,13 @@ SeatDialog::SeatDialog(QWidget *parent) :
         connect(seatVCL[i + 5], &ClickLabel::clicked, this, [=] () {
             QPixmap px;
             int index = seatTypeCB->currentIndex();
-            Q_ASSERT(index < 4);
+            Q_ASSERT(index < SEATTYPEMAX);
             seatSelected[index * 10 + i + 5] = !seatSelected[index * 10 + i + 5];
             // 0-9 一等座
             // 10-19 二等座
-            // 20-29 商务座
-            // 30-39 优选一等座
+            // 20-29 特等座
+            // 30-39 商务座
+            // 40-49 优选一等座
             if (seatSelected[index * 10 + i + 5]) {
                 px.load(_(":/icon/images/choosed_seat.png"));
                 seatVCL[i + 5]->setPixmap(px);
@@ -216,7 +219,7 @@ void SeatDialog::showSeatType(int index)
             seatDescLB[i]->show();
         }
         break;
-    // 商务座
+    // 特等座
     case 2:
         for (int i = 0; i < 10; i++) {
             if (i != 1 && i != 6 &&
@@ -231,11 +234,26 @@ void SeatDialog::showSeatType(int index)
             }
         }
         break;
-    // 优选一等座
+    // 商务座
     case 3:
         for (int i = 0; i < 10; i++) {
-            if (i != 1 && i != 6) {
+            if (i != 1 && i != 6 &&
+                i != 3 && i != 8) {
                 if (seatSelected[i + 30]) {
+                    seatVCL[i]->setPixmap(px2);
+                } else {
+                    seatVCL[i]->setPixmap(px);
+                }
+                seatVCL[i]->show();
+                seatDescLB[i]->show();
+            }
+        }
+        break;
+    // 优选一等座
+    case 4:
+        for (int i = 0; i < 10; i++) {
+            if (i != 1 && i != 6) {
+                if (seatSelected[i + 40]) {
                     seatVCL[i]->setPixmap(px2);
                 } else {
                     seatVCL[i]->setPixmap(px);
@@ -273,7 +291,7 @@ void SeatDialog::clearSelectedSeats()
         seatSelected[i] = false;
         seatVCL[i]->setPixmap(px);
     }
-    for (int i = 10; i < 40; i++) {
+    for (int i = 10; i < 50; i++) {
         seatSelected[i] = false;
     }
     QString tips = tr("已选0/%1").arg(w->passengerDialog->getSelectedPassenger().size());
@@ -317,16 +335,23 @@ QString SeatDialog::getChoosedSeats(QChar seatType)
             }
         }
         break;
-    case '9':
+    case 'P':
         for (int i = 0; i < 10; i++) {
             if (seatSelected[i + 20]) {
                 selectedSeat.append(seatNo[i]);
             }
         }
         break;
-    case 'D':
+    case '9':
         for (int i = 0; i < 10; i++) {
             if (seatSelected[i + 30]) {
+                selectedSeat.append(seatNo[i]);
+            }
+        }
+        break;
+    case 'D':
+        for (int i = 0; i < 10; i++) {
+            if (seatSelected[i + 40]) {
                 selectedSeat.append(seatNo[i]);
             }
         }
