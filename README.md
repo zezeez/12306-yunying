@@ -27,7 +27,7 @@
 ![](https://img.shields.io/badge/Windows-10-pass.svg) ![](https://img.shields.io/badge/MACOS-12.5.3-pass.svg) ![](https://img.shields.io/badge/Ubuntu-20.04-pass.svg)
 
 ### 软件截图
-![](https://www.op9.top/img/running_snapshot.png)
+![](https://op9.top/img/running_snapshot.png)
 
 **Qt版本要求**
 
@@ -46,7 +46,7 @@
 
 从上述网站中下载安装包，优点是简单、开箱即用
 
-##### 方法2: 源代码编译
+##### 方法2 源代码编译
 适合有代码基础的用户
 
 #### 1. 安装Qt编译环境
