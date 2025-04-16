@@ -1,4 +1,4 @@
-# ![yuny logo](images/ticket.ico) 云映12306客户端
+# ![](images/ticket.ico) 云映12306客户端
 
 *由Qt构建的 12306 GUI购票工具*
 
@@ -26,10 +26,8 @@
 ### 测试平台
 ![](https://img.shields.io/badge/Windows-10-pass.svg) ![](https://img.shields.io/badge/MACOS-12.5.3-pass.svg) ![](https://img.shields.io/badge/Ubuntu-20.04-pass.svg)
 
-### 应用下载地址 - https://www.op9.top
-
 ### 软件截图
-![](https://www.op9.top/img/running_snapshot.png)
+![](https://op9.top/img/running_snapshot.png)
 
 **Qt版本要求**
 
@@ -39,26 +37,38 @@
 
 ``支持Windows/MacOS/Linux``
 
-### 使用方法
-#### 1. 安装Qt
-搜索引擎搜索`Qt 安装`即可找到安装方法，以下链接为一个安装教程（记得在安装的时候勾选QtCreator）
+### 安装
 
-[Qt6安装教程(使用国内源)](https://zhuanlan.zhihu.com/p/683591671)
+##### 方法1 直接下载
+2. 目前有两个网站用于发布已编译的安装包，其中Windows为便携版本，无需安装
+   * [https://zezeez.github.io](https://zezeez.github.io)
+   * [https://op9.top](https://op9.top)
 
-#### 2. 注释HAS_CDN
-由于Network库不支持CDN，所以在编译之前请先注释`yunying.pro`文件中的宏`HAS_CDN`
+从上述网站中下载安装包，优点是简单、开箱即用
+
+##### 方法2 源代码编译
+适合有代码基础的用户
+
+#### 1. 安装Qt编译环境
+编译器可选Virtual Studio或MinGW
+
+#### 2. 导入项目
+下载项目仓库代码，在QtCreator中`文件->打开文件或项目`打开项目中`yunying.pro`导入项目
+
+#### 3. 注释HAS_CDN
+由于Qt Network库不支持主动设置域名对应的ip，而是要走一遍域名解析流程，如果不注释HAS_CDN，会报无法解析setIpAddress符号错误，所以在编译之前请先注释`yunying.pro`文件中的宏`HAS_CDN`
+
+前面加上``#``号注释
 
 ``# DEFINES += HAS_CDN``
 
 否则编译会出错
 
-#### 3. 导入项目
-在QtCreator中`文件->打开文件或项目`打开`yunying.pro`即可
+#### 4. 构建并运行
+点击左下角的绿色三角形即自动构建并运行，完成后会弹出软件登陆界面及主界面
 
-#### 3. 构建并运行
-点击左下角的绿色三角形即自动构建并运行
-
-### 建议优先前往[https://op9.top](https://op9.top)下载预编译好的包，如[https://op9.top](https://op9.top)没有对应系统版本则需要自行从源代码编译
+### 使用方法
+如需了解操作步骤、使用方法，参照 [使用教程](https://op9.top/help.html) 提供的使用教程
 
 ## 声明
 ### 本软件仅用于学习交流，禁止用于任何商业行为，包括但不限于车票代购、倒卖、囤票、加价等行为，违者自行承担相关责任
