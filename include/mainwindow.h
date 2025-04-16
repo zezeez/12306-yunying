@@ -28,6 +28,7 @@
 #include "lib/ntp/include/ntp.h"
 #include "selltimequerydialog.h"
 #include "upgrademanager.h"
+#include "completeedit.h"
 
 namespace Ui {
 class MainWindow;
@@ -41,6 +42,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void setRemainTicketColor(QString &remain, QStandardItem *item, bool canCandidate);
+    void setUp();
 
 public slots:
     void userStartStationChanged();
@@ -84,6 +86,7 @@ public:
     void queryTrainStopStation();
     void processStopStationReply(QVariantMap &data);
     void setStationNameCompleter(const QByteArray &nameText);
+    bool hasStationNameCompleter();
     void updateNetQualityStatus(int ms);
     void enterGrabTicketMode();
     void exitGrabTicketMode();
@@ -95,7 +98,6 @@ public:
     void doGrabTicket();
     void switchTableTicketShowType(bool showType);
     void switchTicketShowType();
-    void loadStationName();
     void resetLoginDialog();
     void showLoginDialog();
     void showMainWindow();

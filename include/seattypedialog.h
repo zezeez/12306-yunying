@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QListWidget>
 #include <QPushButton>
+#include "doublelistwidget.h"
 
 class SeatTypeDialog : public QDialog
 {
@@ -13,7 +14,7 @@ public:
     SeatTypeDialog(QWidget *parent = nullptr);
     ~SeatTypeDialog();
     void setUp();
-    void updateSelectedTips();
+    void updateSelectedTips(int leftCount, int rightCount);
     const QList<QString> &getSelectedSeatType() const;
     void setSelectedSeatType();
     void setUnselectedSeatType();
@@ -23,17 +24,9 @@ public:
     void moveDownSeatType();
     void enterGrabTicketMode();
     void exitGrabTicketMode();
-    QString seatTypeCodeToName(QChar code);
 
 public:
-    QListWidget *selected;
-    QListWidget *unSelected;
-    QPushButton *addSelectedPb;
-    QPushButton *addUnSelectedPb;
-    QPushButton *addSelectedAllPb;
-    QPushButton *addUnSelectedAllPb;
-    QPushButton *moveUpSelectedPb;
-    QPushButton *moveDownSelectPb;
+    DoubleListWidget *dListWidget;
 };
 
 #endif // SEATTYPEDIALOG_H

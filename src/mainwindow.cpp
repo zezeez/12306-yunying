@@ -36,7 +36,6 @@
 #include <QAudioOutput>
 #include <QDesktopServices>
 #include "icondelegate.h"
-#include "12306.h"
 #include "version.h"
 
 using namespace Qt;
@@ -66,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     hLayout->addWidget(label = new QLabel(tr("出发站: ")));
     label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     hLayout->addWidget(fromStationLe = new CompleteEdit);
-    fromStationLe->setPlaceholderText(_("简拼/全拼"));
+    fromStationLe->setPlaceholderText(_("简拼/全拼/汉字"));
     fromStationLe->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     fromStationLe->setMaximumWidth(120);
     connect(fromStationLe, &CompleteEdit::editingFinished, this, &MainWindow::userStartStationChanged);
@@ -78,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     hLayout->addWidget(label = new QLabel(tr("到达站: ")));
     label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     hLayout->addWidget(toStationLe = new CompleteEdit);
-    toStationLe->setPlaceholderText(_("简拼/全拼"));
+    toStationLe->setPlaceholderText(_("简拼/全拼/汉字"));
     toStationLe->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     toStationLe->setMaximumWidth(120);
     connect(toStationLe, &CompleteEdit::editingFinished, this, &MainWindow::userEndStationChanged);
@@ -114,20 +113,11 @@ MainWindow::MainWindow(QWidget *parent) :
     vLayout->addLayout(hLayout2);
 
     passengerDialog = new PassengerDialog(this);
-    passengerDialog->setUp();
     trainNoDialog = new TrainNoDialog(this);
-    trainNoDialog->setUp();
     seatTypeDialog = new SeatTypeDialog(this);
-    seatTypeDialog->setUp();
-
     seatDialog = new SeatDialog(this);
-
     loginDialog = new LoginDialog;
-    loginDialog->setUp();
-    loginDialog->setWindowTitle(tr("云映 ") + tr(THISVERSION));
-
     selltimeDialog = new SellTimeQueryDialog(this);
-    selltimeDialog->setup();
 
     doGrabTicketTimer = new QTimer;
     connect(doGrabTicketTimer, &QTimer::timeout, this, &MainWindow::doGrabTicket);
@@ -174,10 +164,19 @@ MainWindow::MainWindow(QWidget *parent) :
     readSettings();
 
     setTabOrder(fromStationLe, toStationLe);
-    selltimeDialog->setQueryText(UserData::instance()->userConfig.staFromName);
 
     statusBar()->showMessage(QStringLiteral("准备就绪"));
     resize(QSize(1200, 800));
+}
+
+void MainWindow::setUp()
+{
+    passengerDialog->setUp();
+    trainNoDialog->setUp();
+    seatTypeDialog->setUp();
+    loginDialog->setUp();
+    selltimeDialog->setup();
+    selltimeDialog->setQueryText(UserData::instance()->userConfig.staFromName);
 }
 
 void MainWindow::updateLoginButtonStatus(bool isLogin)
@@ -238,7 +237,7 @@ void MainWindow::createDockWidget()
     gLayout->addWidget(selectedSeatTypeTipsLabel, 2, 1, 1, 1);
     pb = new QPushButton;
     selectedSeatTipsLabel = new QLabel(tr("已选0/0"));
-    pb->setText(tr("选座"));
+    pb->setText(tr("选座/铺"));
     connect(pb, &QPushButton::clicked, seatDialog, &SeatDialog::show);
     gLayout->addWidget(pb, 3, 0, 1, 1);
     gLayout->addWidget(selectedSeatTipsLabel, 3, 1, 1, 1);
@@ -493,7 +492,7 @@ void MainWindow::setRemainTicketColor(QString &remain, QStandardItem *item, bool
         item->setForeground(Qt::black);
     else {
         item->setForeground(QBrush(QColor(238, 154, 73)));
-        if (!remain.compare(_("候补")) && !canCandidate)
+        if (!canCandidate && !remain.compare(_("候补")))
             item->setForeground(QBrush(QColor(190, 190, 190)));
     }
 }
@@ -567,12 +566,13 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
     QVector<QStringList> invalidTrain;
     QString fromStationName, toStationName;
     const QVector<QPair<int, enum TrainInfoEnum>> tableSeatTypeData = {
+             QPair<int, enum TrainInfoEnum>(ESPECIALSEATCOL, ETZNUM),
              QPair<int, enum TrainInfoEnum>(ESPECIALSEATCOL, ESWZNUM),
+             QPair<int, enum TrainInfoEnum>(EPRIFIRSTPRISEATCOL, EGGNUM),
              QPair<int, enum TrainInfoEnum>(EFIRSTPRISEATCOL, EZYNUM),
              QPair<int, enum TrainInfoEnum>(ESECONDPRISEATCOL, EZENUM),
              QPair<int, enum TrainInfoEnum>(EADVSOFTCROUCHCOL, EGRNUM),
              QPair<int, enum TrainInfoEnum>(ESOFTCROUCHCOL, ERWNUM),
-             QPair<int, enum TrainInfoEnum>(ESTIRCROUCHCOL, EYBNUM),
              QPair<int, enum TrainInfoEnum>(EHARDCROUCHCOL, EYWNUM),
              QPair<int, enum TrainInfoEnum>(ESOFTSEATCOL, ERZNUM),
              QPair<int, enum TrainInfoEnum>(EHARDSEATCOL, EYZNUM),
@@ -793,8 +793,8 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
             model->setItem(itemIdx, ETOSTATIONCOL, item = new QStandardItem);
             item->setTextAlignment(Qt::AlignCenter);
             item->setToolTip(toStationName);
-            item->setFont(QFont("Times", 10, QFont::Black));
-            item->setForeground(QBrush(QColor(99, 184, 255)));
+            /*item->setFont(QFont("Times", 10, QFont::Black));
+            item->setForeground(QBrush(QColor(99, 184, 255)));*/
         }
         if (item->text() != toStationName) {
             item->setText(toStationName);
@@ -868,12 +868,20 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
             bool canCandidate = false;
             curText = trainInfo[seatTypeData.second].isEmpty() ? _("--") :
                               trainInfo[seatTypeData.second];
+            if (seatTypeData.first == ESWZNUM) {
+                if (trainInfo[seatTypeData.second].isEmpty() ||
+                    trainInfo[seatTypeData.second] == _("无") ||
+                    trainInfo[seatTypeData.second] == _("0")) {
+                    tableSeatTypeItems.push_back(item);
+                    continue;
+                }
+            }
             if (!trainInfo[ESECRETSTR].isEmpty() && trainInfo[ECANDIDATETRAINFLAG] == _("1") &&
                 curText == _("无")) {
-                QChar seatTypeCode = seatTypeEnumTransToSubmitCode(seatTypeData.second);
-                if (seatTypeCode != '0' && seatTypeCode != 'W') {
+                if (seatTypeData.second != EWZNUM && seatTypeData.second != EQTNUM) {
                     curText = _("候补");
-                    if (!trainInfo[ECANDIDATESEATLIMIT].contains(seatTypeCode)) {
+                    QChar c = seatTypeNoToCode(seatTypeData.second);
+                    if (c != '0' && !trainInfo[ECANDIDATESEATLIMIT].contains(c)) {
                         canCandidate = true;
                     }
                 }
@@ -933,19 +941,18 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
             int ypInfoNewSize = ypInfoNew.size();
 
             tableSeatTypeItemsMap.insert('9', tableSeatTypeItems[0]);
-            tableSeatTypeItemsMap.insert('P', tableSeatTypeItems[0]);
-            tableSeatTypeItemsMap.insert('M', tableSeatTypeItems[1]);
-            tableSeatTypeItemsMap.insert('O', tableSeatTypeItems[2]);
-            tableSeatTypeItemsMap.insert('S', tableSeatTypeItems[2]);
-            tableSeatTypeItemsMap.insert('6', tableSeatTypeItems[3]);
-            tableSeatTypeItemsMap.insert('A', tableSeatTypeItems[3]);
-            tableSeatTypeItemsMap.insert('4', tableSeatTypeItems[4]);
-            tableSeatTypeItemsMap.insert('I', tableSeatTypeItems[4]);
-            tableSeatTypeItemsMap.insert('F', tableSeatTypeItems[5]);
-            tableSeatTypeItemsMap.insert('3', tableSeatTypeItems[6]);
-            tableSeatTypeItemsMap.insert('J', tableSeatTypeItems[6]);
-            tableSeatTypeItemsMap.insert('2', tableSeatTypeItems[7]);
-            tableSeatTypeItemsMap.insert('1', tableSeatTypeItems[8]);
+            tableSeatTypeItemsMap.insert('P', tableSeatTypeItems[1]);
+            tableSeatTypeItemsMap.insert('D', tableSeatTypeItems[2]);
+            tableSeatTypeItemsMap.insert('M', tableSeatTypeItems[3]);
+            tableSeatTypeItemsMap.insert('O', tableSeatTypeItems[4]);
+            tableSeatTypeItemsMap.insert('6', tableSeatTypeItems[5]);
+            tableSeatTypeItemsMap.insert('4', tableSeatTypeItems[6]);
+            tableSeatTypeItemsMap.insert('F', tableSeatTypeItems[6]);
+            tableSeatTypeItemsMap.insert('I', tableSeatTypeItems[6]);
+            tableSeatTypeItemsMap.insert('3', tableSeatTypeItems[7]);
+            tableSeatTypeItemsMap.insert('J', tableSeatTypeItems[7]);
+            tableSeatTypeItemsMap.insert('2', tableSeatTypeItems[8]);
+            tableSeatTypeItemsMap.insert('1', tableSeatTypeItems[9]);
 
             /*for (auto &seatTypeData : tableSeatTypeData) {
                 tableSeatTypeItems[seatTypeData.first - ESPECIALSEATCOL]->setData(
@@ -965,8 +972,8 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                 int dd = ypInfoNew.sliced(j + 6, 4).toInt();
                 char t = ypInfoNew[j].toLatin1();
                 QMap<char, QStandardItem *>::ConstIterator it =
-                    tableSeatTypeItemsMap.find(t);
-                if (it != tableSeatTypeItemsMap.cend()) {
+                    tableSeatTypeItemsMap.constFind(t);
+                if (it != tableSeatTypeItemsMap.constEnd()) {
                     if (it.value()->text() != _("--")) {
                         it.value()->setToolTip(_("%1").arg(price2));
                         it.value()->setData(price2, Qt::ToolTipRole);
@@ -978,26 +985,26 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                 } else {
                     // 其他
                     if (dd < 3000) {
-                        if (tableSeatTypeItems.size() > 10 &&
-                            tableSeatTypeItems[10]->text() != _("--")) {
-                            tableSeatTypeItems[10]->setToolTip(_("%1").arg(price2));
-                            tableSeatTypeItems[10]->setData(price2, Qt::ToolTipRole);
+                        if (tableSeatTypeItems.size() > 11 &&
+                            tableSeatTypeItems[11]->text() != _("--")) {
+                            tableSeatTypeItems[11]->setToolTip(_("%1").arg(price2));
+                            tableSeatTypeItems[11]->setData(price2, Qt::ToolTipRole);
                             if (uc.showTicketPrice) {
-                                tableSeatTypeItems[10]->setText(_("%1").arg(price2));
-                                tableSeatTypeItems[10]->setForeground(QBrush(QColor(238, 118, 33)));
+                                tableSeatTypeItems[11]->setText(_("%1").arg(price2));
+                                tableSeatTypeItems[11]->setForeground(QBrush(QColor(238, 118, 33)));
                             }
                         }
                     }
                 }
                 // 无座
                 if (dd >= 3000) {
-                    if (tableSeatTypeItems.size() > 9 &&
-                        tableSeatTypeItems[9]->text() != _("--")) {
-                        tableSeatTypeItems[9]->setToolTip(_("%1").arg(price2));
-                        tableSeatTypeItems[9]->setData(price2, Qt::ToolTipRole);
+                    if (tableSeatTypeItems.size() > 10 &&
+                        tableSeatTypeItems[10]->text() != _("--")) {
+                        tableSeatTypeItems[10]->setToolTip(_("%1").arg(price2));
+                        tableSeatTypeItems[10]->setData(price2, Qt::ToolTipRole);
                         if (uc.showTicketPrice) {
-                            tableSeatTypeItems[9]->setText(_("%1").arg(price2));
-                            tableSeatTypeItems[9]->setForeground(QBrush(QColor(238, 118, 33)));
+                            tableSeatTypeItems[10]->setText(_("%1").arg(price2));
+                            tableSeatTypeItems[10]->setForeground(QBrush(QColor(238, 118, 33)));
                         }
                     }
                 }
@@ -1030,10 +1037,8 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
         fromStationName = stationMap.value(trainInfo[EFROMSTATIONTELECODE]).toString();
         toStationName = stationMap.value(trainInfo[ETOSTATIONTELECODE]).toString();
         model->setItem(itemIdx, EFROMSTATIONCOL, item = new QStandardItem);
-        //item->setTextAlignment(Qt::AlignCenter);
         item->setToolTip(fromStationName);
         model->setItem(itemIdx, ETOSTATIONCOL, item = new QStandardItem);
-        //item->setTextAlignment(Qt::AlignCenter);
         item->setToolTip(toStationName);
         for (int k = ESTARTTIMECOL; k < EREMARKCOL; k++) {
             model->setItem(itemIdx, k, item = new QStandardItem(_("--")));
@@ -1049,8 +1054,6 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
         item->setToolTip(trainInfo[ETEXTINFO]);
         itemIdx++;
     }
-    //tableView->resizeColumnToContents(EFROMSTATIONCOL);
-    //tableView->resizeColumnToContents(ETOSTATIONCOL);
 
     if (ud->runStatus == EIDLE) {
         if (useTrainListSize == trainListSize) {
@@ -1066,7 +1069,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
 
 void MainWindow::setStationNameCompleter(const QByteArray &nameText)
 {
-    InputCompleter *ic, *ic2;
+    InputCompleter *ic, *ic2, *ic3;
     UserData *ud = UserData::instance();
     UserConfig &uc = ud->getUserConfig();
 
@@ -1077,10 +1080,10 @@ void MainWindow::setStationNameCompleter(const QByteArray &nameText)
     ic->popup()->setStyleSheet("background-color: #F5F5F5;\
                                color: #000000;\
                                border: 1px solid #BEBEBE;\
-                                                          border-radius: 5px;\
+                               border-radius: 5px;\
                                padding: 2px 2px 2px 2px;\
-                                                         min-width: 17px;\
-                               font: 14px \"Arial\";");
+                               min-width: 8px;\
+                               font: 13px \"Arial\";");
     if (!uc.staFromName.isEmpty() && uc.staFromCode.isEmpty()) {
         uc.staFromCode = ud->getStaCode()->value(uc.staFromName);
     }
@@ -1092,13 +1095,29 @@ void MainWindow::setStationNameCompleter(const QByteArray &nameText)
     ic2->popup()->setStyleSheet("background-color: #F5F5F5;\
                                color: #000000;\
                                border: 1px solid #BEBEBE;\
-                                                          border-radius: 5px;\
+                               border-radius: 5px;\
                                padding: 2px 2px 2px 2px;\
-                                                         min-width: 17px;\
-                               font: 14px \"Arial\";");
+                               min-width: 8px;\
+                               font: 13px \"Arial\";");
     if (!uc.staToName.isEmpty() && uc.staToCode.isEmpty()) {
         uc.staToCode = ud->getStaCode()->value(uc.staToName);
     }
+    ic3 = new InputCompleter(ic);
+    *ic3 = *ic;
+    ic3->setCaseSensitivity((Qt::CaseInsensitive));
+    selltimeDialog->setCompleter(ic3);
+    ic3->popup()->setStyleSheet("background-color: #F5F5F5;\
+                                color: #000000;\
+                                border: 1px solid #BEBEBE;\
+                                border-radius: 5px;\
+                                padding: 2px 2px 2px 2px;\
+                                min-width: 8px;\
+                                font: 13px \"Arial\";");
+}
+
+bool MainWindow::hasStationNameCompleter()
+{
+    return fromStationLe->completer() != nullptr && toStationLe->completer() != nullptr;
 }
 
 void MainWindow::queryTicket()
@@ -1376,35 +1395,38 @@ bool MainWindow::promptBeforeStartGrab()
     UserData *ud = UserData::instance();
     prompt += _("候补：");
     if (ud->candidateSetting.isCandidate) {
-        prompt += _("已启用\n");
+        prompt += _("<b>已启用</b><br>");
     } else {
-        prompt += _("未启用\n");
+        prompt += _("未启用<br>");
     }
     prompt += _("定时抢票：");
     if (ud->grabSetting.fixedTimeGrab) {
-        prompt += _("%1 %2:%3:%4\n").arg(ud->grabSetting.grabTicketDate)
+        prompt += _("<b>%1 %2:%3:%4</b><br><br>").arg(ud->grabSetting.grabTicketDate)
                       .arg(ud->grabSetting.grabTicketHour, 2, 10, QLatin1Char('0'))
                       .arg(ud->grabSetting.grabTicketMinute, 2, 10, QLatin1Char('0'))
                       .arg(ud->grabSetting.grabTicketSecond, 2, 10, QLatin1Char('0'));
     } else {
-        prompt += _("未启用\n");
-        prompt += _("日期：%1\n").arg(ud->userConfig.tourDate);
+        prompt += _("未启用<br><br>");
     }
-    prompt += _("起始站：%1\n").arg(ud->userConfig.staFromName);
-    prompt += _("到达站：%1\n").arg(ud->userConfig.staToName);
+
+    prompt += _("日期：%1<br>").arg(ud->userConfig.tourDate);
+    prompt += _("起始站：%1<br>").arg(ud->userConfig.staFromName);
+    prompt += _("到达站：%1<br><br>").arg(ud->userConfig.staToName);
     prompt += _("乘车人：");
     const QList<QString> &passengers = passengerDialog->getSelectedPassenger();
     for (auto &p : passengers) {
         prompt += p + _("、");
     }
     prompt.truncate(prompt.length() - 1);
-    prompt += _("\n席别：");
+
+    prompt += _("<br>席别：");
     const QList<QString> &seatType = seatTypeDialog->getSelectedSeatType();
     for (auto &s : seatType) {
         prompt += s + _("、");
     }
     prompt.truncate(prompt.length() - 1);
-    prompt += _("\n车次：");
+
+    prompt += _("<br>车次：");
     const QList<QString> &train = trainNoDialog->getSelectedTrainList();
     int count = qMin(train.size(), 50);
     for (int i = 0; i < count; i++) {
@@ -1415,19 +1437,8 @@ bool MainWindow::promptBeforeStartGrab()
         prompt += _("...(更多已隐藏)");
     }
     prompt.truncate(prompt.length() - 1);
-    prompt += _("\n");
-    QString seat = seatDialog->getChoosedSeats('M');
-    if (!seat.isEmpty()) {
-        prompt += _("选座一等座：") + seat + _("\n");
-    }
-    seat = seatDialog->getChoosedSeats('O');
-    if (!seat.isEmpty()) {
-        prompt += _("选座二等座：") + seat + _("\n");
-    }
-    seat = seatDialog->getChoosedSeats('P');
-    if (!seat.isEmpty()) {
-        prompt += _("选座特等座：") + seat + _("\n");
-    }
+    prompt += _("<br>");
+
     /*QLabel la;
     la.setText(prompt);
     QDialog dialog;
@@ -1435,8 +1446,10 @@ bool MainWindow::promptBeforeStartGrab()
     vlayout.addWidget(&la);
     dialog.setLayout(&vlayout);
     return dialog.exec();*/
-    QMessageBox::StandardButton clicked = QMessageBox::information(this, tr("确认信息"),
-        prompt, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    QMessageBox msg;
+    msg.setTextFormat(Qt::RichText);
+    QMessageBox::StandardButton clicked = msg.information(this, tr("确认信息"), prompt,
+                                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return clicked == QMessageBox::Yes;
 }
 
@@ -1514,34 +1527,23 @@ void MainWindow::doGrabTicket()
 void MainWindow::switchTableTicketShowType(bool showTicketPrice)
 {
     QStandardItemModel *model = static_cast<QStandardItemModel *>(tableView->model());
-    int rowcount = model->rowCount();
+    int rowCount = model->rowCount();
     QVariant data;
     QString text;
     QStandardItem *item;
-    const QVector<int> tableSeatTypeData = {
-        ESPECIALSEATCOL,
-        EFIRSTPRISEATCOL,
-        ESECONDPRISEATCOL,
-        EADVSOFTCROUCHCOL,
-        ESOFTCROUCHCOL,
-        ESTIRCROUCHCOL,
-        EHARDCROUCHCOL,
-        ESOFTSEATCOL,
-        EHARDSEATCOL,
-        ENOSEATCOL,
-        EOTHERCOL
-    };
     int role;
     int type;
+
     if (showTicketPrice) {
         role = Qt::ToolTipRole;
     } else {
         role = Qt::WhatsThisRole;
     }
-    for (int i = 0; i < rowcount; i++) {
-        for (auto &seatTypeData : tableSeatTypeData) {
-            data = model->index(i, seatTypeData).data(role);
-            item = model->item(i, seatTypeData);
+
+    for (int i = 0; i < rowCount; i++) {
+        for (int j = ESPECIALSEATCOL; j < EREMARKCOL; j++) {
+            data = model->index(i, j).data(role);
+            item = model->item(i, j);
 
             if (data.isValid()) {
                 text = data.toString();
@@ -1575,20 +1577,6 @@ void MainWindow::switchTicketShowType()
         switchTicketShowTypePb->setText(tr("显示票价"));
     }
     switchTableTicketShowType(uc.showTicketPrice);
-}
-
-void MainWindow::loadStationName()
-{
-    QFile file(QStringLiteral("./station_name_" STATIONNAMEVERSION ".txt"));
-
-    if (file.open(QIODevice::ReadOnly)) {
-        //QTextStream nameFile(&file);
-        //QString nameText = nameFile.readAll();
-        setStationNameCompleter(file.readAll());
-        file.close();
-        return;
-    }
-    NetHelper::instance()->getStationNameTxt();
 }
 
 void MainWindow::resetLoginDialog()
@@ -1701,12 +1689,12 @@ void MainWindow::checkUpdateReply(const QVariantMap &varMap)
         msg += _("更新日志：\n") + verInfo[_("changeLog")].toString() + _("\n");
         msgLabel = new QLabel;
         msgLabel->setText(msg);
+        msgLabel->setMargin(10);
         scrollArea = new QScrollArea;
         scrollArea->setWidget(msgLabel);
         vlayout.addWidget(scrollArea);
         connect(&yes, &QPushButton::clicked, this, [&dialog, this]() {
             dialog.close();
-            //upgradeMng.doUpgrade("../yuny_0.2.0.zip");
             confirmUpdate();
         });
         connect(&no, &QPushButton::clicked, &dialog, [&dialog]() {
@@ -1718,6 +1706,9 @@ void MainWindow::checkUpdateReply(const QVariantMap &varMap)
         hlayout.addStretch();
         vlayout.addLayout(&hlayout);
         dialog.setLayout(&vlayout);
+        dialog.setStyleSheet("QDialog { background-color: #EEE9E9; }"
+                             "QLabel { background-color: #F5F5F5; } "
+                             "QScrollArea { background-color: #F5F5F5; }");
         dialog.resize(300, 300);
         dialog.exec();
 
@@ -1815,6 +1806,12 @@ void MainWindow::setUpTableView()
     //QCheckBox *checkBoxAll = new QCheckBox;
     //tableView->setCornerWidget(checkBoxAll);
     //tableView->setCornerButtonEnabled(true);
+    const QStringList trainTableColumnDesc = { "车次", "出发站", "到达站", "出发时间",
+                                               "到达时间", "用时", "商务/特等", "优一等座",
+                                               "一等座", "二等座", "高级软卧", "软卧/动卧",
+                                               "硬卧", "软座", "硬座", "无座",
+                                               "其他", "备注"
+    };
     Q_ASSERT(trainTableColumnDesc.size() == ETRAINTABLECOLUMNENDTOTAL);
     /*model->setColumnCount(ETRAINTABLECOLUMNENDTOTAL);
     for (size_t i = 0; i < ETRAINTABLECOLUMNENDTOTAL - 1; ++i) {
@@ -1829,11 +1826,12 @@ void MainWindow::setUpTableView()
     tableView->setSortingEnabled(true);
     tableView->verticalHeader()->hide();
     tableView->setContextMenuPolicy(Qt::CustomContextMenu);  //少这句，右键没有任何反应的。
+    //列宽随窗口大小改变而改变，每列平均分配，充满整个表，但是此时列宽不能拖动进行改变
+    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     createRightMenu();  //创建一个右键菜单
     connect(tableView, &QTableView::customContextMenuRequested, this, [&] {
         if (tableView->model()->rowCount()) {
             rightMenu->exec(QCursor::pos());
-            //qDebug() << "index = " << tableView->currentIndex() << endl;
         }
     });
     tableView->setModel(model);
@@ -1843,8 +1841,6 @@ void MainWindow::setUpTableView()
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    //列宽随窗口大小改变而改变，每列平均分配，充满整个表，但是此时列宽不能拖动进行改变
-    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     QMainWindow::resizeEvent(event);
 }
 
@@ -1923,26 +1919,22 @@ void MainWindow::updateNetQualityStatus(int ms)
 void MainWindow::readSettings()
 {
     UserConfig &uc = UserData::instance()->getUserConfig();
-    /*if (ud->readConfigFile()) {
-        UserConfig &uc = ud->getUserConfig();
-        fromStationLe->setText(uc.staFromName);
-        uc.staFromCode = ud->getStaCode()->value(uc.staFromName);
-        toStationLe->setText(uc.staToName);
-        uc.staToCode = ud->getStaCode()->value(uc.staToName);
-        tourDateDe->setDate(QDate::fromString(uc.tourDate, "yyyy-MM-dd"));
-    }*/
     QSettings setting;
     QString text = setting.value(_("query_ticket/from_station_name"), _("")).value<QString>();
+
     fromStationLe->setText(text);
     uc.staFromName = text;
     uc.staFromCode = UserData::instance()->getStaCode()->value(text);
+
     text = setting.value(_("query_ticket/to_station_name"), _("")).value<QString>();
     uc.staToName = text;
     uc.staToCode = UserData::instance()->getStaCode()->value(text);
     toStationLe->setText(text);
+
     text = setting.value(_("query_ticket/tour_date"), _("")).value<QString>();
     QDate curDate = QDate::currentDate();
     QDate setDate = QDate::fromString(text, _("yyyy-MM-dd"));
+
     if (!setDate.isValid() || setDate < curDate) {
         tourDateDe->setDate(curDate);
     } else {
@@ -1953,14 +1945,6 @@ void MainWindow::readSettings()
 
 void MainWindow::initStatusBars()
 {
-    /*QLabel *label = new QLabel;
-    //label->setAlignment(Qt::AlignVCenter);
-    //label->setMinimumSize(label->sizeHint());
-    statusBar()->addWidget(label);
-
-    label = new QLabel;
-    label->setIndent(3);
-    statusBar()->addWidget(label);*/
     QPixmap pixmap;
 
 #ifdef HAS_CDN
@@ -2029,7 +2013,7 @@ void MainWindow::about()
 
 void MainWindow::onlineHelp()
 {
-    QDesktopServices::openUrl(QUrl(_("https://www.op9.top/help.html")));
+    QDesktopServices::openUrl(QUrl(_("https://op9.top/help.html#quick-start")));
 }
 
 MainWindow::~MainWindow()

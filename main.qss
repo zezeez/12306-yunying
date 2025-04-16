@@ -13,7 +13,7 @@ QMainWindow::separator:hover {
 }
 
 QPushButton {
-  background-color: #F0F8FF;
+  background-color: #d0ebff;
   border-style: outset;
   border-width: 4px;
   border-radius: 8px;
@@ -22,11 +22,10 @@ QPushButton {
   min-width: 4em;
   /*min-height: 18px;*/
   padding: 2px;
-  color: #1874CD;
+  color: #1864ab;
 }
 QPushButton:hover {
-  /*background-color: #B2DFEE;*/
-  background-color: #B0E2FF;
+  background-color: #a5d8ff;
   border-color: #90EE90;
 }
 QPushButton:disabled {
@@ -37,12 +36,12 @@ QLineEdit {
   border: 2px solid gray;
   border-radius: 10px;
   padding: 0 8px;
-  background: #F0FFFF;
+  background: #e6fcf5;
   selection-background-color: darkgray;
 }
 
 QLineEdit:hover,focus {
-    background-color: #D6EAF8;
+    background-color: #c3fae8;
     border-color: #66CDAA;
 }
 
@@ -143,7 +142,7 @@ QMenu::item {
 QMenu::item:selected {
   /*border-color: darkblue;*/
   /*background: rgba(100, 100, 100, 150);*/
-  background-color: #85929E
+  background-color: #87CEFA;
 }
 
 QMenu::icon:checked { /* appearance of a 'checked' icon */
@@ -191,13 +190,13 @@ QMenuBar::item:pressed {
 QDateEdit {
   spacing: 3px;
   padding: 1px 4px;
-  background: #A3E4D7;
+  background: #F0F2EC;
   border: 2px;
   border-radius: 8px;
 }
 
 QDateEdit:hover,focus {
-    background-color: #7DCEA0
+    background-color: #DAD7D0
 }
 
 QDateEdit:disabled {
@@ -524,3 +523,29 @@ QDateTimeEdit:up-arrow:pressed {
 QDateTimeEdit:enabled:hover,focus {
     border-color: #3498DB
 }
+
+/* QCalendarWidget */
+/* navigation bar */
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background: #87CEFA;
+}
+
+/* header row */
+QCalendarWidget QWidget#qt_calendar_calendarview {
+    alternate-background-color: #F0F8FF;
+}
+
+QCalendarWidget QToolButton {
+    height: 25px;
+    width: 60px;
+    color: white;
+    icon-size: 20px, 20px;
+}
+
+QCalendarWidget QToolButton#qt_calendar_monthbutton::menu-indicator {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    right: 4px;
+    width: 12px;
+}
+

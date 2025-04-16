@@ -14,122 +14,164 @@
 
 extern MainWindow *w;
 
-int seatTypeTranslate(const QList<QString> &seatTypeStrList, QVector<int> &seatType)
+/*
+static const QVector<QPair<QString, int>> seatTypeNameIndex = {
+    QPair<QString, int>(_("高级软卧"), TICKETIDX(EGRNUM)),
+    QPair<QString, int>(_("其他"), TICKETIDX(EQTNUM)),
+    QPair<QString, int>(_("软卧"), TICKETIDX(ERWNUM)),
+    QPair<QString, int>(_("软座"), TICKETIDX(ERZNUM)),
+    QPair<QString, int>(_("无座"), TICKETIDX(EWZNUM)),
+    QPair<QString, int>(_("动卧"), TICKETIDX(EYBNUM)),
+    QPair<QString, int>(_("硬卧"), TICKETIDX(EYWNUM)),
+    QPair<QString, int>(_("硬座"), TICKETIDX(EYZNUM)),
+    QPair<QString, int>(_("二等座"), TICKETIDX(EZENUM)),
+    QPair<QString, int>(_("一等座"), TICKETIDX(EZYNUM)),
+    QPair<QString, int>(_("商务特等座"), TICKETIDX(ESWZNUM))
+};
+*/
+
+static const QMap<QString, int> seatTypeNameIndexMap = {
+    { _("商务座"), TICKETIDX(ESWZNUM) },
+    { _("特等座"), TICKETIDX(ETZNUM) },
+    { _("优选一等座"), TICKETIDX(EGGNUM) },
+    { _("一等座"), TICKETIDX(EZYNUM) },
+    { _("二等座"), TICKETIDX(EZENUM) },
+    { _("高级软卧"), TICKETIDX(EGRNUM) },
+    { _("软卧"), TICKETIDX(ERWNUM) },
+    { _("动卧"), TICKETIDX(ESRRBNUM) },
+    { _("硬卧"), TICKETIDX(EYWNUM) },
+    { _("软座"), TICKETIDX(ERZNUM) },
+    { _("硬座"), TICKETIDX(EYZNUM) },
+    { _("无座"), TICKETIDX(EWZNUM) },
+    { _("其他"), TICKETIDX(EQTNUM) }
+};
+
+static const QMap<int, QChar> ticketIndexCodeMap = {
+    { TICKETIDX(ESWZNUM), '9' },
+    {TICKETIDX(ETZNUM), 'P' },
+    { TICKETIDX(EGGNUM), 'D' },
+    { TICKETIDX(EZYNUM), 'M' },
+    { TICKETIDX(EZENUM), 'O' },
+    { TICKETIDX(EGRNUM), '6' },
+    { TICKETIDX(ERWNUM), '4' },
+    { TICKETIDX(ESRRBNUM), 'F' },
+    { TICKETIDX(EYWNUM), '3' },
+    { TICKETIDX(ERZNUM), '2' },
+    { TICKETIDX(EYZNUM), '1' },
+    { TICKETIDX(EWZNUM), 'W' },
+    { TICKETIDX(EQTNUM), 'H' }
+};
+
+static const QMap<enum TrainInfoEnum, QChar> seatTypeNoCodeMap = {
+    { ESWZNUM, '9' },
+    { ETZNUM, 'P' },
+    { EGGNUM, 'D' },
+    { EZYNUM, 'M' },
+    { EZENUM, 'O' },
+    { EGRNUM, '6' },
+    { ERWNUM, '4' },
+    { ESRRBNUM, 'F' },
+    { EYWNUM, '3' },
+    { ERZNUM, '2' },
+    { EYZNUM, '1' },
+    { EWZNUM, 'W' },
+    { EQTNUM, 'H' }
+};
+
+static const QMap<QString, QChar> seatTypeNameCodeMap = {
+    { _("商务座"), '9' },
+    { _("特等座"), 'P' },
+    { _("优选一等座"), 'D' },
+    { _("一等座"), 'M' },
+    { _("二等座"), 'O' },
+    { _("高级软卧"), '6' },
+    { _("软卧"), '4' },
+    { _("动卧"), 'F' },
+    { _("硬卧"), '3' },
+    { _("软座"), '2' },
+    { _("硬座"), '1' },
+    { _("无座"), 'W' },
+    { _("其他"), 'H' },
+};
+
+static const QMap<QChar, QString> SeatTypeCodeNameMap = {
+    { '9', _("商务座") },
+    { 'P', _("特等座"), },
+    { 'D', _("优选一等座") },
+    { 'M', _("一等座") },
+    { 'O', _("二等座") },
+    { '6', _("高级软卧") },
+    { '4', _("软卧") },
+    { 'F', _("动卧") },
+    { '3', _("硬卧") },
+    { '2', _("软座") },
+    { '1', _("硬座") },
+    { 'W', _("无座") },
+    { 'H', _("其他") },
+};
+
+int seatTypeNameToTicketIndex(const QList<QString> &seatTypeStrList, QVector<int> &seatType)
 {
-    QStringList seatTypeTrans = {
-        QStringLiteral("Unknown"),
-        QStringLiteral("高级软卧"),
-        QStringLiteral("其他"),
-        QStringLiteral("软卧"),
-        QStringLiteral("软座"),
-        QStringLiteral("Unknown"),
-        QStringLiteral("无座"),
-        QStringLiteral("动卧"),
-        QStringLiteral("硬卧"),
-        QStringLiteral("硬座"),
-        QStringLiteral("二等座"),
-        QStringLiteral("一等座"),
-        QStringLiteral("商务特等座"),
-        QStringLiteral("Unknown")
-    };
-    int seatTypeTransSize = seatTypeTrans.size();
-    for (int i = 0; i < seatTypeStrList.size(); i++) {
-        const QString &seatTypeStr = seatTypeStrList[i];
-        for (int j = 0; j < seatTypeTransSize; j++) {
-            if (seatTypeTrans[j] == seatTypeStr)
-                seatType.append(j);
+    QMap<QString, int>::ConstIterator it;
+
+    for (const QString &s : seatTypeStrList) {
+        it = seatTypeNameIndexMap.constFind(s);
+        if (it != seatTypeNameIndexMap.constEnd()) {
+            seatType.append(it.value());
         }
     }
 
     return seatType.size();
 }
 
-QString seatTypeTranslateDesc(int seatType)
+QString ticketIndexToseatTypeName(int ticketIndex)
 {
-    QStringList seatTypeTrans = {
-        QStringLiteral("Unknown"),
-        QStringLiteral("高级软卧"),
-        QStringLiteral("其他"),
-        QStringLiteral("软卧"),
-        QStringLiteral("软座"),
-        QStringLiteral("Unknown"),
-        QStringLiteral("无座"),
-        QStringLiteral("Unknown"),
-        QStringLiteral("硬卧"),
-        QStringLiteral("硬座"),
-        QStringLiteral("二等座"),
-        QStringLiteral("一等座"),
-        QStringLiteral("商务特等座"),
-        QStringLiteral("动卧")
-    };
-    if (seatType < 0 || seatType >= seatTypeTrans.size())
-        return _("Unknown");
-    return seatTypeTrans[seatType];
-}
+    QMap<QString, int>::ConstIterator it;
 
-QChar seatTypeTransToSubmitCode(int type)
-{
-    QChar seatTypeSubmitCode[] = {
-        '0',
-        'A',
-        '0',
-        '4',
-        '0',
-        '0',
-        'W',
-        '0',
-        '3',
-        '1',
-        'O',
-        'M',
-        '9',
-        'F'
-    };
-    Q_ASSERT(type >= 0 && type < static_cast<int>(sizeof(seatTypeSubmitCode) /
-                                  sizeof(seatTypeSubmitCode[0])));
-    return seatTypeSubmitCode[type];
-}
-
-QChar seatTypeDescTransToSubmitCode(const QString &seatTYpeDesc)
-{
-    QStringList seatTypeTrans = {
-        QStringLiteral("Unknown"),
-        QStringLiteral("高级软卧"),
-        QStringLiteral("其他"),
-        QStringLiteral("软卧"),
-        QStringLiteral("软座"),
-        QStringLiteral("Unknown"),
-        QStringLiteral("无座"),
-        QStringLiteral("Unknown"),
-        QStringLiteral("硬卧"),
-        QStringLiteral("硬座"),
-        QStringLiteral("二等座"),
-        QStringLiteral("一等座"),
-        QStringLiteral("商务特等座"),
-        QStringLiteral("动卧")
-    };
-    QChar seatTypeSubmitCode[] = {
-        '0',
-        'A',
-        '0',
-        '4',
-        '0',
-        '0',
-        'W',
-        '0',
-        '3',
-        '1',
-        'O',
-        'M',
-        '9',
-        'F'
-    };
-    for (int i = 0; i < seatTypeTrans.size(); i++) {
-        if (seatTYpeDesc == seatTypeTrans[i]) {
-            return seatTypeSubmitCode[i];
-        }
+    for (it = seatTypeNameIndexMap.constBegin(); it != seatTypeNameIndexMap.constEnd(); ++it) {
+        if (it.value() == ticketIndex)
+            return it.key();
     }
+    return _("未知");
+}
+
+QChar ticketIndexToCode(int ticketIndex)
+{
+    QMap<int, QChar>::ConstIterator it;
+
+    it = ticketIndexCodeMap.constFind(ticketIndex);
+    if (it != ticketIndexCodeMap.constEnd()) {
+        return it.value();
+    }
+
     return '0';
+}
+
+QChar seatTypeNoToCode(enum TrainInfoEnum seatTypeNo)
+{
+    QMap<enum TrainInfoEnum, QChar>::ConstIterator it;
+
+    it = seatTypeNoCodeMap.constFind(seatTypeNo);
+
+    return it != seatTypeNoCodeMap.constEnd() ? it.value() : '0';
+}
+
+QChar seatTypeNameToCode(const QString &seatTypeName)
+{
+    QMap<QString, QChar>::ConstIterator it;
+
+    it = seatTypeNameCodeMap.constFind(seatTypeName);
+
+    return it != seatTypeNameCodeMap.constEnd() ? it.value() : '0';
+}
+
+QString seatTypeCodeToName(QChar code)
+{
+    QMap<QChar, QString>::ConstIterator it;
+
+    it = SeatTypeCodeNameMap.constFind(code);
+
+    return it != SeatTypeCodeNameMap.constEnd() ? it.value() : _("未知");
 }
 
 Analysis::Analysis(QVector<QStringList> &trainVec) : trainInfoVec(trainVec)
@@ -155,7 +197,7 @@ int Analysis::sufficientTicketPrioSelectTrain(const QVariantMap &stationMap)
     UserData *ud = UserData::instance();
     const QList<QString> &selectedSeatTypeStrList = w->seatTypeDialog->getSelectedSeatType();
     Q_ASSERT(selectedSeatTypeStrList.size() <= TICKETSIZE);
-    selectSeatTypeSize = seatTypeTranslate(selectedSeatTypeStrList, selectSeatType);
+    selectSeatTypeSize = seatTypeNameToTicketIndex(selectedSeatTypeStrList, selectSeatType);
     const QList<QString> &passengerList = w->passengerDialog->getSelectedPassenger();
     const QSet<QString> &selectedTrainSet = w->trainNoDialog->getSelectedTrainSet();
     bool filterByCondition = false;
@@ -236,9 +278,9 @@ int Analysis::strictTrainPrioSelectTrain(const QVariantMap &stationMap)
     int partialTicketMax = 0;
     int partialTicketMaxIndex = -1;
     int j;
-    QList<QString> selectedSeatTypeStrList = w->seatTypeDialog->getSelectedSeatType();
+    const QList<QString> selectedSeatTypeStrList = w->seatTypeDialog->getSelectedSeatType();
     Q_ASSERT(selectedSeatTypeStrList.size() <= TICKETSIZE);
-    selectSeatTypeSize = seatTypeTranslate(selectedSeatTypeStrList, selectSeatType);
+    selectSeatTypeSize = seatTypeNameToTicketIndex(selectedSeatTypeStrList, selectSeatType);
     const QList<QString> &selectedTrain = w->trainNoDialog->getSelectedTrainList();
     const QList<QString> &passengerList = w->passengerDialog->getSelectedPassenger();
     QString s;
@@ -295,7 +337,7 @@ int Analysis::strictTravelTimePrioSelectTrain(const QVariantMap &stationMap)
     int travelTimeShortestIdx = -1;
     const QList<QString> &selectedSeatTypeStrList = w->seatTypeDialog->getSelectedSeatType();
     Q_ASSERT(selectedSeatTypeStrList.size() <= TICKETSIZE);
-    selectSeatTypeSize = seatTypeTranslate(selectedSeatTypeStrList, selectSeatType);
+    selectSeatTypeSize = seatTypeNameToTicketIndex(selectedSeatTypeStrList, selectSeatType);
     const QSet<QString> &selectedTrainSet = w->trainNoDialog->getSelectedTrainSet();
     const QList<QString> &passengerList = w->passengerDialog->getSelectedPassenger();
     int travelTimeHour;
@@ -356,7 +398,7 @@ int Analysis::strictStartTimePrioSelectTrain(const QVariantMap &stationMap)
     int partialTicketMaxIdx = -1;
     const QList<QString> &selectedSeatTypeStrList = w->seatTypeDialog->getSelectedSeatType();
     Q_ASSERT(selectedSeatTypeStrList.size() <= TICKETSIZE);
-    selectSeatTypeSize = seatTypeTranslate(selectedSeatTypeStrList, selectSeatType);
+    selectSeatTypeSize = seatTypeNameToTicketIndex(selectedSeatTypeStrList, selectSeatType);
     const QSet<QString> &selectedTrainSet = w->trainNoDialog->getSelectedTrainSet();
     const QList<QString> &passengerList = w->passengerDialog->getSelectedPassenger();
     NetHelper *nh = NetHelper::instance();
@@ -400,11 +442,13 @@ void Analysis::initTrainTicketInfo()
     trainTicketInfo.resize(trainInfoVec.size());
     QVector<int> trainSeatTypeDataNum = {
                                          ESWZNUM,
+                                         ETZNUM,
+                                         EGGNUM,
                                          EZYNUM,
                                          EZENUM,
                                          EGRNUM,
                                          ERWNUM,
-                                         EYBNUM,
+                                         ESRRBNUM,
                                          EYWNUM,
                                          ERZNUM,
                                          EYZNUM,
@@ -446,7 +490,7 @@ void Analysis::sufficientSeatTypePrioSelectSeatType(const QVector<int> &selectSe
         seatVec.push_back(std::pair(ticketSeatTypeMax, ticketSeatMax > passengerSize ?
                                                            passengerSize : ticketSeatMax));
         trainTicketInfo[trainNoIdx][ticketSeatTypeMax] -= ticketSeatMax;
-        w->formatOutput(_("已选择席别%1, 余票%2").arg(seatTypeTranslateDesc(ticketSeatTypeMax),
+        w->formatOutput(_("已选择席别%1, 余票%2").arg(ticketIndexToseatTypeName(ticketSeatTypeMax),
                                                       ticketSeatMax == 100 ?
                                                           _("充足") : _("%1张").arg(ticketSeatMax)));
     }
@@ -458,7 +502,7 @@ void Analysis::sufficientSeatTypePrioSelectSeatType(const QVector<int> &selectSe
             if (ticketNum > 0) {
                 seatVec.push_back(std::pair(selectSeatType[j], ticketNum > remain ?
                                                                    remain : ticketNum));
-                w->formatOutput(_("已选择席别%1, 余票%2").arg(seatTypeTranslateDesc(selectSeatType[j]),
+                w->formatOutput(_("已选择席别%1, 余票%2").arg(ticketIndexToseatTypeName(selectSeatType[j]),
                                                               ticketNum == 100 ?
                                                                   _("充足") : _("%1张").arg(ticketNum)));
                 remain -= ticketNum;
@@ -486,7 +530,7 @@ void Analysis::strictPriceLowToHighSelectSeatType(const QVector<int> &selectSeat
             if (ticketNum > 0) {
                 seatVec.push_back(std::pair(priceLowToHigh[i], ticketNum > remain ?
                                                                    remain : ticketNum));
-                w->formatOutput(_("已选择席别%1, 余票%2").arg(seatTypeTranslateDesc(priceLowToHigh[i]),
+                w->formatOutput(_("已选择席别%1, 余票%2").arg(ticketIndexToseatTypeName(priceLowToHigh[i]),
                                                               ticketNum == 100 ?
                                                                   _("充足") : _("%1张").arg(ticketNum)));
                 remain -= ticketNum;
@@ -509,7 +553,7 @@ QVector<std::pair<int, int>> Analysis::trainSelectSeatType(int trainNoIdx)
     int selectSeatTypeSize = 0;
     const QList<QString> &selectedSeatTypeStrList = w->seatTypeDialog->getSelectedSeatType();
     Q_ASSERT(selectedSeatTypeStrList.size() <= TICKETSIZE);
-    selectSeatTypeSize = seatTypeTranslate(selectedSeatTypeStrList, selectSeatType);
+    selectSeatTypeSize = seatTypeNameToTicketIndex(selectedSeatTypeStrList, selectSeatType);
     const QList<QString> &passengerList = w->passengerDialog->getSelectedPassenger();
     QVector<std::pair<int, int>> seatVec;
 
@@ -518,11 +562,15 @@ QVector<std::pair<int, int>> Analysis::trainSelectSeatType(int trainNoIdx)
             sufficientSeatTypePrioSelectSeatType(selectSeatType, seatVec, trainNoIdx, passengerList.size());
         } else if (ud->grabSetting.seatTypePrio.strictSeatTypePrio) {
             int remain = passengerList.size();
+            w->formatOutput(_("正在选择席别，使用规则：按选中席别的顺序提交"));
             for (int j = 0; j < selectSeatTypeSize; j++) {
                 int ticketNum = trainTicketInfo[trainNoIdx][selectSeatType[j]];
                 if (ticketNum > 0) {
                     seatVec.push_back(std::pair(selectSeatType[j], ticketNum > remain ?
                                                                        remain : ticketNum));
+                    w->formatOutput(_("已选择席别%1, 余票%2").arg(ticketIndexToseatTypeName(selectSeatType[j]),
+                                                                ticketNum == 100 ?
+                                                                _("充足") : _("%1张").arg(ticketNum)));
                     remain -= ticketNum;
                     if (remain <= 0) {
                         break;
@@ -535,13 +583,13 @@ QVector<std::pair<int, int>> Analysis::trainSelectSeatType(int trainNoIdx)
             }
         } else if (ud->grabSetting.seatTypePrio.priceLowSeatTypePrioWhensufficient) {
             QStringList priceLowToHighStrList = { _("无座"), _("硬座"), _("二等座"),
-                                                 _("一等座"), _("软座"), _("硬卧"),
-                                                 _("商务特等座"), _("软卧"), _("高级软卧"),
-                                                 _("动卧") };
+                                                  _("一等座"), _("优选一等座"), _("软座"), _("硬卧"),
+                                                  _("特等座"), _("商务座"), _("软卧"), _("高级软卧"),
+                                                  _("动卧") };
             QVector<int> priceLowToHigh;
             int priceLowToHighSize;
             int i;
-            priceLowToHighSize = seatTypeTranslate(priceLowToHighStrList, priceLowToHigh);
+            priceLowToHighSize = seatTypeNameToTicketIndex(priceLowToHighStrList, priceLowToHigh);
             w->formatOutput(_("正在选择席别，使用规则：余票充足时价格低的席别优先提交"));
             for (i = 0; i < priceLowToHighSize; i++) {
                 if (selectSeatType.contains(priceLowToHigh[i])) {
@@ -549,7 +597,7 @@ QVector<std::pair<int, int>> Analysis::trainSelectSeatType(int trainNoIdx)
                     // 余票充足，即显示为有
                     if (ticketNum == 100) {
                         seatVec.push_back(std::pair(priceLowToHigh[i], passengerList.size()));
-                        w->formatOutput(_("已选择席别%1, 余票%2").arg(seatTypeTranslateDesc(priceLowToHigh[i]),
+                        w->formatOutput(_("已选择席别%1, 余票%2").arg(ticketIndexToseatTypeName(priceLowToHigh[i]),
                                                                       ticketNum == 100 ?
                                                                           _("充足") : _("%1张").arg(ticketNum)));
                         break;
@@ -561,20 +609,20 @@ QVector<std::pair<int, int>> Analysis::trainSelectSeatType(int trainNoIdx)
             }
         } else if (ud->grabSetting.seatTypePrio.priceLowSeatTypePrio) {
             QStringList priceLowToHighStrList = { _("无座"), _("硬座"), _("二等座"),
-                                                 _("一等座"), _("软座"), _("硬卧"),
-                                                 _("商务特等座"), _("软卧"), _("高级软卧"),
-                                                 _("动卧") };
+                                                  _("一等座"), _("优选一等座"), _("软座"), _("硬卧"),
+                                                  _("特等座"), _("商务座"), _("软卧"), _("高级软卧"),
+                                                  _("动卧") };
             QVector<int> priceLowToHigh;
-            seatTypeTranslate(priceLowToHighStrList, priceLowToHigh);
+            seatTypeNameToTicketIndex(priceLowToHighStrList, priceLowToHigh);
             w->formatOutput(_("正在选择席别，使用规则：价格低的席别优先提交"));
             strictPriceLowToHighSelectSeatType(selectSeatType, priceLowToHigh, seatVec,
                                                trainNoIdx, passengerList.size());
         } else {
             // ud->grabSetting.seatTypePrio.priceHighSeatTypePrio
-            QStringList priceHighToLowStrList = { _("动卧"),  _("高级软卧"), _("软卧"),_("商务特等座"),
-                                                 _("硬卧"), _("软座"),_("一等座"), _("二等座"), _("硬座"), _("无座")};
+            QStringList priceHighToLowStrList = { _("动卧"),  _("高级软卧"), _("软卧"), _("商务座"), _("特等座"),
+                                                 _("硬卧"), _("软座"), _("优选一等座"), _("一等座"), _("二等座"), _("硬座"), _("无座")};
             QVector<int> priceHighToLow;
-            seatTypeTranslate(priceHighToLowStrList, priceHighToLow);
+            seatTypeNameToTicketIndex(priceHighToLowStrList, priceHighToLow);
             w->formatOutput(_("正在选择席别，使用规则：价格高的席别优先提交"));
             strictPriceLowToHighSelectSeatType(selectSeatType, priceHighToLow, seatVec,
                                                trainNoIdx, passengerList.size());
@@ -600,10 +648,10 @@ std::pair<QString, QString> Analysis::generateSubmitTicketInfo(int trainNoIdx, Q
         if (idx >= passengerList.size())
             break;
         int k;
-        QChar code = seatTypeTransToSubmitCode(seatVec[i].first);
+        QChar code = ticketIndexToCode(seatVec[i].first);
         if (code == '0') {
             qDebug() << "Unsupported seat type: " << seatVec[i].first;
-            w->formatOutput(_("不支持的席别类型：") + seatTypeTranslateDesc(seatVec[i].first));
+            w->formatOutput(_("不支持的席别类型：") + ticketIndexToseatTypeName(seatVec[i].first));
             continue;
         }
         // 无座
@@ -700,7 +748,7 @@ bool Analysis::mayCandidate(const QVariantMap &stationMap, const QString &date)
     int trainInfoVecSize = trainInfoVec.size();
     const QList<QString> &selectedSeatTypeList = w->seatTypeDialog->getSelectedSeatType();
     QVector<int> selectSeatType;
-    int selectSeatTypeSize = seatTypeTranslate(selectedSeatTypeList, selectSeatType);
+    int selectSeatTypeSize = seatTypeNameToTicketIndex(selectedSeatTypeList, selectSeatType);
     const QSet<QString> &selectedTrainSet = w->trainNoDialog->getSelectedTrainSet();
     UserData *ud = UserData::instance();
     struct CandidateDateInfo dInfo;
@@ -729,8 +777,9 @@ bool Analysis::mayCandidate(const QVariantMap &stationMap, const QString &date)
                 selectSeatType[j] == 6) {
                 continue;
             }
-            if (trainTicketInfo[i][selectSeatType[j]] == 0 || ud->candidateSetting.forceCandidate) {
-                QChar code = seatTypeDescTransToSubmitCode(selectedSeatTypeList[j]);
+            if (trainTicketInfo[i][selectSeatType[j]] == 0 ||
+                (trainTicketInfo[i][selectSeatType[j]] != -1 && ud->candidateSetting.forceCandidate)) {
+                QChar code = seatTypeNameToCode(selectedSeatTypeList[j]);
                 if (code != '0') {
                     if (trainList[ECANDIDATESEATLIMIT].contains(code)) {
                         w->formatOutput(_("当前%1车次%2席别提交的候补订单较多，跳过...")

@@ -28,49 +28,7 @@ int SysUtil::setSysTime(const QDateTime &newTime)
 
 #if defined(Q_OS_WIN)
     SYSTEMTIME st;
-    /*HANDLE hToken;
-    TOKEN_PRIVILEGES tkp;
-    //获得SE_SYSTEMTIME_NAME权限//
-    // Get a token for this process.
-    if (!OpenProcessToken(GetCurrentProcess(),
-                          TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-        return( FALSE );
 
-    //(获得SE_SYSTEMTIME_NAME权限，才可设置系统时间成功)
-    LookupPrivilegeValue(NULL, SE_SYSTEMTIME_NAME,
-                         &tkp.Privileges[0].Luid);
-
-    tkp.PrivilegeCount = 1;  // one privilege to set
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp),
-                          (PTOKEN_PRIVILEGES)NULL, 0);
-
-    qDebug() << GetLastError();
-    if (GetLastError() != ERROR_SUCCESS) {
-        CloseHandle(hToken);
-        return 0;
-    }*/
-
-    /*STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-    LPWSTR s = {};
-    wsprintfW(s, L"123");
-    // Start the child process.
-    if( !CreateProcess( 0,   // No module name (use command line)
-                       s,        // Command line
-                       0,           // Process handle not inheritable
-                       0,           // Thread handle not inheritable
-                       FALSE,          // Set handle inheritance to FALSE
-                       0,              // No creation flags
-                       0,           // Use parent's environment block
-                       0,           // Use parent's starting directory
-                       &si,            // Pointer to STARTUPINFO structure
-                       &pi )           // Pointer to PROCESS_INFORMATION structure
-        )
-    {
-
-    }*/
     GetSystemTime(&st);
     st.wYear = newTime.date().year();
     st.wMonth = newTime.date().month();
@@ -87,8 +45,6 @@ int SysUtil::setSysTime(const QDateTime &newTime)
     } else {
         w->formatOutput("更新系统时间成功");
     }
-    qDebug() << "set local time ret: " << ret;
-    //CloseHandle(hToken);
 #else
     std::tm time_tm = { };
     time_tm.tm_year = newTime.date().year() - 1900;  // 年份从1900开始

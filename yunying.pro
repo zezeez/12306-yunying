@@ -36,9 +36,12 @@ SOURCES += \
     lib/dns/src/rr.cpp \
     lib/ntp/src/ntp.cpp \
     src/analysis.cpp \
+    src/bedwidget.cpp \
     src/cdn.cpp \
     src/chart/barchart.cpp \
     src/chart/linechart.cpp \
+    src/customlabel.cpp \
+    src/doublelistwidget.cpp \
     src/frozentrain.cpp \
     src/loginconf.cpp \
     src/logindialog.cpp \
@@ -50,7 +53,6 @@ SOURCES += \
     src/selltimequerydialog.cpp \
     src/serverip.cpp \
     src/settingdialog.cpp \
-    src/sliderwidget.cpp \
     src/sysutil.cpp \
     src/trainnodialog.cpp \
     src/upgrademanager.cpp \
@@ -63,10 +65,13 @@ SOURCES += \
 HEADERS += \
     include/12306.h \
     include/analysis.h \
+    include/bedwidget.h \
     include/cdn.h \
     include/chart/barchart.h \
     include/chart/linechart.h \
     include/cookieapi.h \
+    include/customlabel.h \
+    include/doublelistwidget.h \
     include/frozentrain.h \
     include/icondelegate.h \
     include/loginconf.h \
@@ -79,7 +84,6 @@ HEADERS += \
     include/selltimequerydialog.h \
     include/serverip.h \
     include/settingdialog.h \
-    include/sliderwidget.h \
     include/sysutil.h \
     include/trainnodialog.h \
     include/upgrademanager.h \

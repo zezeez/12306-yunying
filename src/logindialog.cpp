@@ -20,6 +20,7 @@
 #include <QMovie>
 #include <QHostInfo>
 #include <QComboBox>
+#include "version.h"
 
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent)
@@ -192,6 +193,8 @@ void LoginDialog::setUp()
 #ifdef HAS_CDN
     sip.dnsAnswer("kyfw.12306.cn");
 #endif
+
+    setWindowTitle(tr("云映 ") + tr(THISVERSION));
 }
 
 void LoginDialog::tabIndexChanged(int index)

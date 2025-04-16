@@ -6,7 +6,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QComboBox>
-#include <completeedit.h>
+#include <customlabel.h>
 #include <QTabWidget>
 #include "serverip.h"
 

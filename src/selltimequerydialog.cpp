@@ -7,20 +7,10 @@
 SellTimeQueryDialog::SellTimeQueryDialog(QWidget *parent) :
     QDialog(parent)
 {
-
-}
-
-SellTimeQueryDialog::~SellTimeQueryDialog()
-{
-
-}
-
-void SellTimeQueryDialog::setup()
-{
     QVBoxLayout *vlayout = new QVBoxLayout;
     QHBoxLayout *hlayout = new QHBoxLayout;
     QLabel *la = new QLabel(tr("起售车站: "));
-    queryStaLe = new QLineEdit;
+    queryStaLe = new CompleteEdit(this);
     QPushButton *pb = new QPushButton(tr("查询"));
     msgLabel = new QLabel;
     msgLabel->setStyleSheet(_("color: red"));
@@ -36,6 +26,16 @@ void SellTimeQueryDialog::setup()
     vlayout->addStretch();
     setLayout(vlayout);
     resize(450, 300);
+}
+
+SellTimeQueryDialog::~SellTimeQueryDialog()
+{
+
+}
+
+void SellTimeQueryDialog::setup()
+{
+
 }
 
 QString SellTimeQueryDialog::getInputStaCode()
@@ -179,4 +179,9 @@ void SellTimeQueryDialog::queryLcTimeReply(QVariantMap &varMap)
 void SellTimeQueryDialog::setQueryText(const QString &text)
 {
     queryStaLe->setText(text);
+}
+
+void SellTimeQueryDialog::setCompleter(InputCompleter *ic)
+{
+    queryStaLe->setCompleter(ic);
 }

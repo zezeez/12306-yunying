@@ -121,7 +121,7 @@ void UpgradeManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
                                    .arg(rInSecs.sizeUnit));
     } else {
         updatePd->setValue(0);
-        updatePd->setLabelText(_("正在下载更新文件%1        已下载: %2.%3 %4/总共: 未知  %5 %7/s")
+        updatePd->setLabelText(_("正在下载更新文件%1        已下载: %2.%3 %4/总共: 未知  %5 %6/s")
                                    .arg(downloadFileName)
                                    .arg(r.main)
                                    .arg(r.decimal)

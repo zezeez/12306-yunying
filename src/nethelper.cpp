@@ -31,6 +31,7 @@
 #define _ QStringLiteral
 
 extern MainWindow *w;
+static QString station_version = STATIONNAMEVERSION;
 
 void ReqParam::put(const QString &key, const QString &value)
 {
@@ -466,8 +467,34 @@ void NetHelper::leftTicketInit()
 
 void NetHelper::leftTicketInitReply(QNetworkReply *reply)
 {
-    if (checkReplyOk(reply) < 0)
-        return;
+    QVariantMap varMap;
+    QString k(_("station_name.js?station_version="));
+    QString r;
+    int pos, pos2;
+
+    replyIsOk(reply, varMap);
+    r = varMap[_("data")].toString();
+    if (!r.isEmpty()) {
+        pos = r.indexOf(k);
+        if (pos != -1) {
+            pos2 = r.indexOf('"', pos + k.length());
+            if (pos2 != -1) {
+               station_version = r.sliced(pos + k.length(), pos2 - (pos + k.length()));
+            }
+        }
+    }
+
+    QFile f(STATIONNAMEFILE);
+    if (!f.exists()) {
+        getStationNameTxt();
+    } else {
+        if (!w->hasStationNameCompleter()) {
+            if (f.open(QFile::ReadOnly)) {
+                w->setStationNameCompleter(f.readAll());
+                f.close();
+            }
+        }
+    }
 }
 
 void NetHelper::initLoginCookie()
@@ -933,9 +960,12 @@ void NetHelper::queryDiffDateTicket(const QString &date)
 {
     QUrl url;
     UserConfig &uc = UserData::instance()->getUserConfig();
-    url.setUrl(_(BASEURL PUBLICNAME "/leftTicket/queryE?leftTicketDTO.train_date=%1"
-                                    "&leftTicketDTO.from_station=%2&leftTicketDTO.to_station=%3&purpose_codes=ADULT")
-                   .arg(date, uc.staFromCode, uc.staToCode));
+    QString args;
+
+    args = _("?leftTicketDTO.train_date=%1"
+                "&leftTicketDTO.from_station=%2&leftTicketDTO.to_station=%3&purpose_codes=ADULT")
+                .arg(date, uc.staFromCode, uc.staToCode);
+    url.setUrl(queryLeftTicketUrl + args);
 
     QList<std::pair<QString, QString>> headers;
     headers.append(std::pair<QString, QString>("If-Modified-Since", "0"));
@@ -1478,8 +1508,8 @@ void NetHelper::checkOrderInfoReply(QNetworkReply *reply)
     //int intervalTime = data[QStringLiteral("ifShowPassCodeTime")].toInt();
     canChooseSeats = data[QStringLiteral("canChooseSeats")].toString() == "Y";
     chooseSeat = data[QStringLiteral("choose_Seats")].toString();
-    //bool canChooseBeds = data[QStringLiteral("canChooseBeds")].toString() == "Y";
-    //bool isCanChooseMid = data[QStringLiteral("isCanChooseMid")].toString() == "Y";
+    canChooseBeds = data[QStringLiteral("canChooseBeds")].toString() == "Y";
+    isCanChooseMid = data[QStringLiteral("isCanChooseMid")].toString() == "Y";
     UserData *ud = UserData::instance();
     if (ud->submitTicketInfo.isAsync) {
         getQueueCount();
@@ -1550,11 +1580,11 @@ void NetHelper::getQueueCountReply(QNetworkReply *reply)
     int totalRemain = 0;
     int remain = ticketList[0].toInt(&ok);
     if (ok) {
-        disp.append(_("本次列车%1余票%2张").arg(seatTypeSubmtiCodeTransToDesc(c))
+        disp.append(_("本次列车%1余票%2张").arg(seatTypeCodeToName(c))
                         .arg(remain));
         totalRemain = remain;
     } else {
-        disp.append(_("本次列车%1余票%2").arg(seatTypeSubmtiCodeTransToDesc(c),
+        disp.append(_("本次列车%1余票%2").arg(seatTypeCodeToName(c),
                         ticketList[0]));
     }
     if (ticketList.length() > 1) {
@@ -1591,18 +1621,11 @@ void NetHelper::getQueueCountReply(QNetworkReply *reply)
     confirmSingleForQueue();
 }
 
-void NetHelper::confirmSingle()
+QString NetHelper::getCommitSeatStr()
 {
-    QUrl url(QStringLiteral(CONFIRMSINGLEFORQUEUE));
-    ReqParam param;
+    QString selectedSeats;
     UserData *ud = UserData::instance();
 
-    param.put(_("passengerTicketStr"), ud->submitTicketInfo.passengerTicketInfo);
-    param.put(_("oldPassengerStr"), ud->submitTicketInfo.oldPassengerTicketInfo);
-    param.put(_("purpose_codes"), ud->submitTicketInfo.purposeCodes);
-    param.put(_("key_check_isChange"), ud->submitTicketInfo.keyCheckIsChange);
-    param.put(_("leftTicketStr"), ud->submitTicketInfo.leftTicketStr.toUtf8().toPercentEncoding());
-    param.put(_("train_location"), ud->submitTicketInfo.trainLocation);
     if (canChooseSeats && !chooseSeat.isEmpty() &&
         !ud->submitTicketInfo.submitSeatType.isEmpty()) {
         QChar isSame = ud->submitTicketInfo.submitSeatType[0].second;
@@ -1612,7 +1635,6 @@ void NetHelper::confirmSingle()
                 break;
             }
         }
-        QString selectedSeats;
         if (i == ud->submitTicketInfo.submitSeatType.size() && chooseSeat.contains(isSame)) {
             selectedSeats = w->seatDialog->getChoosedSeats(isSame);
             if (selectedSeats.size() > ud->submitTicketInfo.submitSeatType.size() * 2) {
@@ -1631,14 +1653,88 @@ void NetHelper::confirmSingle()
                 }
             }
         } else {
-            w->formatOutput(_("本次提交暂不支持选座，将由系统随机分配座位"));
+            w->formatOutput(_("本次提交暂不支持选座，如已选座，将忽略"));
         }
-        param.put(_("choose_seats"), selectedSeats);
     } else {
-        param.put(_("choose_seats"), _(""));
-        w->formatOutput(_("本次列车暂不支持选座，将由系统自动分配座位"));
+        w->formatOutput(_("本次列车暂不支持选座，如已选座，将忽略"));
     }
-    param.put(_("seatDetailType"), _("000"));
+
+    return selectedSeats;
+}
+
+QString NetHelper::getCommitBedStr()
+{
+    UserData *ud = UserData::instance();
+    int commitBeds = 0;
+    int bedPos[3];
+    QString bedStr;
+    QString msg;
+
+    if (canChooseBeds) {
+        for (QPair<QString, QChar> &seatType : ud->submitTicketInfo.submitSeatType) {
+            if (seatType.second == '3' || seatType.second == '4' ||
+                seatType.second == '6' || seatType.second == 'F' ||
+                seatType.second == 'I' || seatType.second == 'J') {
+                commitBeds++;
+            }
+        }
+        bedPos[0] = w->seatDialog->getChoosedBeds(BEDLOW);  // 下铺
+        bedPos[1] = w->seatDialog->getChoosedBeds(BEDMIDDLE);  // 中铺
+        bedPos[2] = w->seatDialog->getChoosedBeds(BEDHIGH);  // 上铺
+        if (!isCanChooseMid) {
+            bedPos[1] = 0;
+        }
+        int choosedBedNum = bedPos[0] + bedPos[1] + bedPos[2];
+        if (choosedBedNum && choosedBedNum < commitBeds) {
+            w->formatOutput(_("已选铺人数少于提交人数，本次提交不选铺，将由系统随机分配卧铺"));
+        } else if (choosedBedNum && commitBeds) {
+            if (bedPos[0] < commitBeds) {
+                bedStr.append(QString::number(bedPos[0]));
+                commitBeds -= bedPos[0];
+                if (bedPos[1] < commitBeds) {
+                    bedStr.append(QString::number(bedPos[1]));
+                    commitBeds -= bedPos[1];
+                }
+            }
+            bedStr.append(QString::number(commitBeds));
+            while (bedStr.size() < 3) {
+                bedStr.append('0');
+            }
+            msg.append(_("提交选铺 下铺"));
+            // "000" 下铺中铺上铺
+            if (bedStr[1] != '0') {
+                msg.append(_(" 中铺"));
+            }
+            if (bedStr[2] != '0') {
+                msg.append(_(" 上铺"));
+            }
+            msg.append(_("，实际选铺以系统出票结果为准"));
+            w->formatOutput(msg);
+        } else {
+            bedStr = _("000");
+            w->formatOutput(_("本次席别未选铺，将由系统随机分配卧铺"));
+        }
+    } else {
+        bedStr = _("000");
+    }
+
+    return bedStr;
+}
+
+void NetHelper::confirmSingle()
+{
+    QUrl url(QStringLiteral(CONFIRMSINGLEFORQUEUE));
+    ReqParam param;
+    UserData *ud = UserData::instance();
+
+    param.put(_("passengerTicketStr"), ud->submitTicketInfo.passengerTicketInfo);
+    param.put(_("oldPassengerStr"), ud->submitTicketInfo.oldPassengerTicketInfo);
+    param.put(_("purpose_codes"), ud->submitTicketInfo.purposeCodes);
+    param.put(_("key_check_isChange"), ud->submitTicketInfo.keyCheckIsChange);
+    param.put(_("leftTicketStr"), ud->submitTicketInfo.leftTicketStr.toUtf8().toPercentEncoding());
+    param.put(_("train_location"), ud->submitTicketInfo.trainLocation);
+    param.put(_("choose_seats"), getCommitSeatStr());
+    param.put(_("seatDetailType"), getCommitBedStr());
     param.put(_("is_jy"), _("N"));
     param.put(_("is_cj"), _("N"));
     param.put(_("whatsSelect"), ud->whatsSelect(true) ? _("1") : _("0"));
@@ -1702,43 +1798,8 @@ void NetHelper::confirmSingleForQueue()
     param.put(_("key_check_isChange"), ud->submitTicketInfo.keyCheckIsChange);
     param.put(_("leftTicketStr"), ud->submitTicketInfo.leftTicketStr.toUtf8().toPercentEncoding());
     param.put(_("train_location"), ud->submitTicketInfo.trainLocation);
-    if (canChooseSeats && !chooseSeat.isEmpty() &&
-        !ud->submitTicketInfo.submitSeatType.isEmpty()) {
-        QChar isSame = ud->submitTicketInfo.submitSeatType[0].second;
-        int i;
-        for (i = 1; i < ud->submitTicketInfo.submitSeatType.size(); i++) {
-            if (ud->submitTicketInfo.submitSeatType[i].second != isSame) {
-                break;
-            }
-        }
-        QString selectedSeats;
-        if (i == ud->submitTicketInfo.submitSeatType.size() && chooseSeat.contains(isSame)) {
-            selectedSeats = w->seatDialog->getChoosedSeats(isSame);
-            if (selectedSeats.size() > ud->submitTicketInfo.submitSeatType.size() * 2) {
-                selectedSeats.truncate(ud->submitTicketInfo.submitSeatType.size() * 2);
-                w->formatOutput(_("提交选座%1，实际座位号以系统出票结果为准").arg(selectedSeats));
-            } else {
-                if (selectedSeats.size() < ud->submitTicketInfo.submitSeatType.size() * 2) {
-                    if (selectedSeats.isEmpty()) {
-                        w->formatOutput(_("本次席别未选座，将由系统随机分配座位"));
-                    } else {
-                        w->formatOutput(_("已选座人数少于提交人数，本次提交不选座，将由系统随机分配座位"));
-                        selectedSeats.clear();
-                    }
-                } else {
-                    w->formatOutput(_("提交选座%1，实际座位号以系统出票结果为准").arg(selectedSeats));
-                }
-            }
-        } else {
-            w->formatOutput(_("本次提交暂不支持选座，将由系统随机分配座位"));
-        }
-        param.put(_("choose_seats"), selectedSeats);
-        qDebug() << selectedSeats;
-    } else {
-        param.put(_("choose_seats"), _(""));
-        w->formatOutput(_("本次列车暂不支持选座，将由系统随机分配座位"));
-    }
-    param.put(_("seatDetailType"), _("000"));
+    param.put(_("choose_seats"), getCommitSeatStr());
+    param.put(_("seatDetailType"), getCommitBedStr());
     param.put(_("is_jy"), _("N"));
     param.put(_("is_cj"), _("Y"));
     param.put(_("encryptedData"), _(""));
@@ -1750,7 +1811,7 @@ void NetHelper::confirmSingleForQueue()
 
     post(url, param, &NetHelper::confirmSingleForQueueReply);
     w->formatOutput(_("正在确认订单..."));
-    qDebug() << param.get();
+    //qDebug() << param.get();
     qDebug() << __FUNCTION__;
 }
 
@@ -1931,28 +1992,21 @@ void NetHelper::getStationNameTxtReply(QNetworkReply *reply)
     QByteArray text = reply->readAll();
 
     if (!text.isEmpty()) {
-        w->setStationNameCompleter(text);
-        saveStationNameFile(text);
+        if (!w->hasStationNameCompleter()) {
+            w->setStationNameCompleter(text);
+        }
+        if (!QFile::exists(STATIONNAMEFILE)) {
+            saveStationNameFile(STATIONNAMEFILE, text);
+        }
     }
 }
 
-void NetHelper::saveStationNameFile(const QByteArray &nameText)
+void NetHelper::saveStationNameFile(const QString &fileName, const QByteArray &text)
 {
-    QString dataPath = getAppDataPath();
-    if (dataPath.isEmpty()) {
-        dataPath = "./data";
-        QDir dir;
-        if (!dir.exists(dataPath)) {
-            if (!dir.mkpath(dataPath)) {
-                qWarning() << "Could not create data directory:" << dataPath;
-                return;
-            }
-        }
-    }
-    QFile file(dataPath + "/station_name_" STATIONNAMEVERSION ".txt");
+    QFile file(fileName);
 
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(nameText);
+    if (file.open(QFile::WriteOnly)) {
+        file.write(text);
         file.close();
     } else {
         qWarning() << "Could not open file " << file.fileName() << " to write";
@@ -1989,7 +2043,7 @@ void NetHelper::grabTicketSuccess()
                                             ud->submitTicketInfo.fromStationName, ud->submitTicketInfo.toStationName,
                                             ud->submitTicketInfo.fromTime, ud->submitTicketInfo.toTime,
                                             ud->submitTicketInfo.travelTime,
-                                            seatTypeSubmtiCodeTransToDesc(ud->submitTicketInfo.submitSeatType[0].second)));
+                                            seatTypeCodeToName(ud->submitTicketInfo.submitSeatType[0].second)));
     w->startOrStopGrabTicket();
     if (ud->generalSetting.playMusic) {
         w->startOrStopPlayMusic();
@@ -2275,7 +2329,7 @@ void NetHelper::getCandidateQueueNumReply(QNetworkReply *reply)
             QString train_date = d[_("train_date")].toString();
             w->formatOutput(_("车次：%1, 乘车日期：%2, 席别：%3 %4")
                                 .arg(train_code, train_date,
-                                     seatTypeSubmtiCodeTransToDesc(seat_type_code[0].toLatin1()),
+                                     seatTypeCodeToName(seat_type_code[0].toLatin1()),
                                      queue_info));
         }
     }
@@ -2409,7 +2463,7 @@ void NetHelper::confirmHB()
         if (!trainDate.train.isEmpty()) {
             for (k = 0; k < trainDate.train[0].seatType.size(); k++) {
                 if (k < 3) {
-                    dispSeat += seatTypeSubmtiCodeTransToDesc(trainDate.train[0].seatType[k]) + ',';
+                    dispSeat += seatTypeCodeToName(trainDate.train[0].seatType[k]) + ',';
                 }
                 if (!seatCode.contains(trainDate.train[0].seatType[k])) {
                     seatCode.insert(trainDate.train[0].seatType[k]);
@@ -2639,7 +2693,7 @@ void NetHelper::sendMail()
             mailContent += _("<td>%1</td>").arg(now.toString(_("yyyy-MM-dd hh:mm:ss")));
             mailContent += _("<td>%1</td>").arg(ud->submitTicketInfo.date);
             mailContent += _("<td>%1</td>").arg(ud->submitTicketInfo.trainCode);
-            mailContent += _("<td>%1</td>").arg(seatTypeSubmtiCodeTransToDesc(ud->submitTicketInfo.submitSeatType[i].second));
+            mailContent += _("<td>%1</td>").arg(seatTypeCodeToName(ud->submitTicketInfo.submitSeatType[i].second));
             mailContent += _("<td>%1</td>").arg(ud->submitTicketInfo.startSTationName);
             mailContent += _("<td>%1</td>").arg(ud->submitTicketInfo.endStationName);
             mailContent += _("<td>%1</td>").arg(ud->submitTicketInfo.fromStationName);
@@ -2703,7 +2757,7 @@ void NetHelper::sendCandidateMail()
             mailContent += _("<td>%1</td>").arg(text);
             text.clear();
             for (auto &seatType : ud->candidateInfo.allSeatType) {
-                text += seatTypeSubmtiCodeTransToDesc(seatType) + _("、");
+                text += seatTypeCodeToName(seatType) + _("、");
             }
             if (!text.isEmpty()) {
                 text.truncate(text.length() - 1);
@@ -3137,18 +3191,6 @@ void NetHelper::payWebBusinessReply(QNetworkReply *reply)
             }
             QString cachePath = getAppCachePath();
 
-            if (cachePath.isEmpty()) {
-                qWarning() << "Could not open application cache path";
-                cachePath = "./cache";
-                QDir dir;
-                if (!dir.exists(cachePath)) {
-                    if (!dir.mkpath(cachePath)) {
-                        qWarning() << "Could not create data directory:" << cachePath;
-                        handlePayError();
-                        return;
-                    }
-                }
-            }
             QTemporaryFile *tempFile = new QTemporaryFile(cachePath + _("/XXXXXX.html"));
             if (tempFile->open()) {
                 int ret = tempFile->write(data);

@@ -3,6 +3,7 @@
 #include <QNetworkReply>
 #include <QVector>
 #include <QString>
+#include "userdata.h"
 
 class Analysis
 {
@@ -29,6 +30,11 @@ private:
     QVector<QVector<int>> trainTicketInfo;
 };
 
-QChar seatTypeDescTransToSubmitCode(const QString &seatTypeDesc);
+int seatTypeNameToTicketIndex(const QList<QString> &seatTypeStrList, QVector<int> &seatType);
+QString ticketIndexToseatTypeName(int ticketIndex);
+QChar ticketIndexToCommitCode(int ticketIndex);
+QChar seatTypeNoToCode(enum TrainInfoEnum seatTypeNo);
+QChar seatTypeNameToCode(const QString &seatTypeName);
+QString seatTypeCodeToName(QChar commitCode);
 
 #endif // ANALYSIS_H
