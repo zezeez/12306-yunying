@@ -30,88 +30,23 @@ static const QVector<QPair<QString, int>> seatTypeNameIndex = {
 };
 */
 
-static const QMap<QString, int> seatTypeNameIndexMap = {
-    { _("商务座"), TICKETIDX(ESWZNUM) },
-    { _("特等座"), TICKETIDX(ETZNUM) },
-    { _("优选一等座"), TICKETIDX(EGGNUM) },
-    { _("一等座"), TICKETIDX(EZYNUM) },
-    { _("二等座"), TICKETIDX(EZENUM) },
-    { _("高级软卧"), TICKETIDX(EGRNUM) },
-    { _("软卧"), TICKETIDX(ERWNUM) },
-    { _("动卧"), TICKETIDX(ESRRBNUM) },
-    { _("硬卧"), TICKETIDX(EYWNUM) },
-    { _("软座"), TICKETIDX(ERZNUM) },
-    { _("硬座"), TICKETIDX(EYZNUM) },
-    { _("无座"), TICKETIDX(EWZNUM) },
-    { _("其他"), TICKETIDX(EQTNUM) }
-};
-
-static const QMap<int, QChar> ticketIndexCodeMap = {
-    { TICKETIDX(ESWZNUM), '9' },
-    {TICKETIDX(ETZNUM), 'P' },
-    { TICKETIDX(EGGNUM), 'D' },
-    { TICKETIDX(EZYNUM), 'M' },
-    { TICKETIDX(EZENUM), 'O' },
-    { TICKETIDX(EGRNUM), '6' },
-    { TICKETIDX(ERWNUM), '4' },
-    { TICKETIDX(ESRRBNUM), 'F' },
-    { TICKETIDX(EYWNUM), '3' },
-    { TICKETIDX(ERZNUM), '2' },
-    { TICKETIDX(EYZNUM), '1' },
-    { TICKETIDX(EWZNUM), 'W' },
-    { TICKETIDX(EQTNUM), 'H' }
-};
-
-static const QMap<enum TrainInfoEnum, QChar> seatTypeNoCodeMap = {
-    { ESWZNUM, '9' },
-    { ETZNUM, 'P' },
-    { EGGNUM, 'D' },
-    { EZYNUM, 'M' },
-    { EZENUM, 'O' },
-    { EGRNUM, '6' },
-    { ERWNUM, '4' },
-    { ESRRBNUM, 'F' },
-    { EYWNUM, '3' },
-    { ERZNUM, '2' },
-    { EYZNUM, '1' },
-    { EWZNUM, 'W' },
-    { EQTNUM, 'H' }
-};
-
-static const QMap<QString, QChar> seatTypeNameCodeMap = {
-    { _("商务座"), '9' },
-    { _("特等座"), 'P' },
-    { _("优选一等座"), 'D' },
-    { _("一等座"), 'M' },
-    { _("二等座"), 'O' },
-    { _("高级软卧"), '6' },
-    { _("软卧"), '4' },
-    { _("动卧"), 'F' },
-    { _("硬卧"), '3' },
-    { _("软座"), '2' },
-    { _("硬座"), '1' },
-    { _("无座"), 'W' },
-    { _("其他"), 'H' },
-};
-
-static const QMap<QChar, QString> SeatTypeCodeNameMap = {
-    { '9', _("商务座") },
-    { 'P', _("特等座"), },
-    { 'D', _("优选一等座") },
-    { 'M', _("一等座") },
-    { 'O', _("二等座") },
-    { '6', _("高级软卧") },
-    { '4', _("软卧") },
-    { 'F', _("动卧") },
-    { '3', _("硬卧") },
-    { '2', _("软座") },
-    { '1', _("硬座") },
-    { 'W', _("无座") },
-    { 'H', _("其他") },
-};
-
 int seatTypeNameToTicketIndex(const QList<QString> &seatTypeStrList, QVector<int> &seatType)
 {
+    static const QMap<QString, int> seatTypeNameIndexMap = {
+        { _("商务座"), TICKETIDX(ESWZNUM) },
+        { _("特等座"), TICKETIDX(ETZNUM) },
+        { _("优选一等座"), TICKETIDX(EGGNUM) },
+        { _("一等座"), TICKETIDX(EZYNUM) },
+        { _("二等座"), TICKETIDX(EZENUM) },
+        { _("高级软卧"), TICKETIDX(EGRNUM) },
+        { _("软卧"), TICKETIDX(ERWNUM) },
+        { _("动卧"), TICKETIDX(ESRRBNUM) },
+        { _("硬卧"), TICKETIDX(EYWNUM) },
+        { _("软座"), TICKETIDX(ERZNUM) },
+        { _("硬座"), TICKETIDX(EYZNUM) },
+        { _("无座"), TICKETIDX(EWZNUM) },
+        { _("其他"), TICKETIDX(EQTNUM) }
+    };
     QMap<QString, int>::ConstIterator it;
 
     for (const QString &s : seatTypeStrList) {
@@ -126,6 +61,21 @@ int seatTypeNameToTicketIndex(const QList<QString> &seatTypeStrList, QVector<int
 
 QString ticketIndexToseatTypeName(int ticketIndex)
 {
+    static const QMap<QString, int> seatTypeNameIndexMap = {
+        { _("商务座"), TICKETIDX(ESWZNUM) },
+        { _("特等座"), TICKETIDX(ETZNUM) },
+        { _("优选一等座"), TICKETIDX(EGGNUM) },
+        { _("一等座"), TICKETIDX(EZYNUM) },
+        { _("二等座"), TICKETIDX(EZENUM) },
+        { _("高级软卧"), TICKETIDX(EGRNUM) },
+        { _("软卧"), TICKETIDX(ERWNUM) },
+        { _("动卧"), TICKETIDX(ESRRBNUM) },
+        { _("硬卧"), TICKETIDX(EYWNUM) },
+        { _("软座"), TICKETIDX(ERZNUM) },
+        { _("硬座"), TICKETIDX(EYZNUM) },
+        { _("无座"), TICKETIDX(EWZNUM) },
+        { _("其他"), TICKETIDX(EQTNUM) }
+    };
     QMap<QString, int>::ConstIterator it;
 
     for (it = seatTypeNameIndexMap.constBegin(); it != seatTypeNameIndexMap.constEnd(); ++it) {
@@ -137,6 +87,21 @@ QString ticketIndexToseatTypeName(int ticketIndex)
 
 QChar ticketIndexToCode(int ticketIndex)
 {
+    static const QMap<int, QChar> ticketIndexCodeMap = {
+        { TICKETIDX(ESWZNUM), '9' },
+        {TICKETIDX(ETZNUM), 'P' },
+        { TICKETIDX(EGGNUM), 'D' },
+        { TICKETIDX(EZYNUM), 'M' },
+        { TICKETIDX(EZENUM), 'O' },
+        { TICKETIDX(EGRNUM), '6' },
+        { TICKETIDX(ERWNUM), '4' },
+        { TICKETIDX(ESRRBNUM), 'F' },
+        { TICKETIDX(EYWNUM), '3' },
+        { TICKETIDX(ERZNUM), '2' },
+        { TICKETIDX(EYZNUM), '1' },
+        { TICKETIDX(EWZNUM), 'W' },
+        { TICKETIDX(EQTNUM), 'H' }
+    };
     QMap<int, QChar>::ConstIterator it;
 
     it = ticketIndexCodeMap.constFind(ticketIndex);
@@ -149,6 +114,21 @@ QChar ticketIndexToCode(int ticketIndex)
 
 QChar seatTypeNoToCode(enum TrainInfoEnum seatTypeNo)
 {
+    static const QMap<enum TrainInfoEnum, QChar> seatTypeNoCodeMap = {
+        { ESWZNUM, '9' },
+        { ETZNUM, 'P' },
+        { EGGNUM, 'D' },
+        { EZYNUM, 'M' },
+        { EZENUM, 'O' },
+        { EGRNUM, '6' },
+        { ERWNUM, '4' },
+        { ESRRBNUM, 'F' },
+        { EYWNUM, '3' },
+        { ERZNUM, '2' },
+        { EYZNUM, '1' },
+        { EWZNUM, 'W' },
+        { EQTNUM, 'H' }
+    };
     QMap<enum TrainInfoEnum, QChar>::ConstIterator it;
 
     it = seatTypeNoCodeMap.constFind(seatTypeNo);
@@ -158,6 +138,21 @@ QChar seatTypeNoToCode(enum TrainInfoEnum seatTypeNo)
 
 QChar seatTypeNameToCode(const QString &seatTypeName)
 {
+    static const QMap<QString, QChar> seatTypeNameCodeMap = {
+        { _("商务座"), '9' },
+        { _("特等座"), 'P' },
+        { _("优选一等座"), 'D' },
+        { _("一等座"), 'M' },
+        { _("二等座"), 'O' },
+        { _("高级软卧"), '6' },
+        { _("软卧"), '4' },
+        { _("动卧"), 'F' },
+        { _("硬卧"), '3' },
+        { _("软座"), '2' },
+        { _("硬座"), '1' },
+        { _("无座"), 'W' },
+        { _("其他"), 'H' },
+    };
     QMap<QString, QChar>::ConstIterator it;
 
     it = seatTypeNameCodeMap.constFind(seatTypeName);
@@ -167,6 +162,21 @@ QChar seatTypeNameToCode(const QString &seatTypeName)
 
 QString seatTypeCodeToName(QChar code)
 {
+    static const QMap<QChar, QString> SeatTypeCodeNameMap = {
+        { '9', _("商务座") },
+        { 'P', _("特等座"), },
+        { 'D', _("优选一等座") },
+        { 'M', _("一等座") },
+        { 'O', _("二等座") },
+        { '6', _("高级软卧") },
+        { '4', _("软卧") },
+        { 'F', _("动卧") },
+        { '3', _("硬卧") },
+        { '2', _("软座") },
+        { '1', _("硬座") },
+        { 'W', _("无座") },
+        { 'H', _("其他") },
+    };
     QMap<QChar, QString>::ConstIterator it;
 
     it = SeatTypeCodeNameMap.constFind(code);
