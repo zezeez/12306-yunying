@@ -3119,7 +3119,7 @@ void NetHelper::payWebBusiness()
     QByteArray byteData(data);
     byteData.replace("GBK", "UTF-8");
     byteData.replace('\n', "");
-    delete data;
+    delete [] data;
 
     w->formatOutput(_("正在打开支付页面..."));
     QDomDocument doc("tranData");
