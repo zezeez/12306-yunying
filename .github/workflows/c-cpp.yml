@@ -39,20 +39,20 @@ jobs:
 
       - name: (可选) 用 macdeployqt 打包
         run: |
-          APP_PATH=$(find . -name "yunying.app" | head -n 1)
+          APP_PATH=$(find . -name "yuny.app" | head -n 1)
           if [ -d "$APP_PATH" ]; then
             /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt "$APP_PATH"
           else
-            echo "yunying.app not found, skip macdeployqt"
+            echo "yuny.app not found, skip macdeployqt"
           fi
 
-      - name: 压缩 yunying.app
+      - name: 压缩 yuny.app
         run: |
-          APP_PATH=$(find . -name "yunying.app" | head -n 1)
+          APP_PATH=$(find . -name "yuny.app" | head -n 1)
           if [ -d "$APP_PATH" ]; then
             zip -r yunying-macos-arm64.zip "$APP_PATH"
           else
-            echo "yunying.app not found"
+            echo "yuny.app not found"
             exit 1
           fi
 
