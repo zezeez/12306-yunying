@@ -1,16 +1,13 @@
 name: Qt GUI CI
 
 on:
-  push:
-    tags:
-      - 'v*'  # Trigger on version tags (e.g., v1.0.0)
-  workflow_dispatch:  # Allow manual triggering
+  [push, pull_request, workflow_dispatch]
 
 jobs:
   build-package:
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     name: Build and Package on ${{ matrix.os }}
     
@@ -22,7 +19,7 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: '6.6.2'
-        host: 'linux'
+        host: ${{ startsWith(matrix.os, 'macos') && 'mac' || startsWith(matrix.os, 'windows') && 'win' || 'linux' }}
         target: 'desktop'
         modules: 'qtcharts qtmultimedia'
 
@@ -32,8 +29,6 @@ jobs:
     
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake xvfb
         echo "github.event: toJSON(github.event)"
         
     - name: Configure with qmake
