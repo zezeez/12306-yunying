@@ -1,0 +1,49 @@
+# .github/workflows/build-arm64.yml
+
+name: Qt macOS Build (arm64)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build 12306-yunying for macOS arm64
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Qt (universal2)
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.1'           # 建议使用 Qt 6 的 universal2 构建
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'          # 实际包含 universal2 版本（x86_64+arm64）
+          modules: 'qtbase'
+          setup-python: false
+
+      - name: Prepare environment
+        run: |
+          echo "QMAKE_MAC_SDK = macosx" >> arm64.conf
+          echo "QMAKE_APPLE_DEVICE_ARCHS = arm64" >> arm64.conf
+
+      - name: Build with qmake for arm64
+        run: |
+          qmake CONFIG+=release QMAKE_SPEC=macx-clang QMAKE_EXTRA_CONF=arm64.conf
+          make -j$(sysctl -n hw.logicalcpu)
+
+      - name: Check architecture
+        run: |
+          file your_binary_or_app/Contents/MacOS/your_executable
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64-build
+          path: |
+            ./build/yunying
