@@ -35,6 +35,7 @@ jobs:
           host: 'mac'
           target: 'desktop'
           arch: 'clang_64'
+          modules: 'qtcharts qtmultimedia'
 
       # ✅ 构建项目（你使用 yunying.pro）
       - name: Build project for arm64
