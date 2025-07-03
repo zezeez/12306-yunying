@@ -64,11 +64,15 @@ jobs:
     - name: Configure with qmake
       run: |
         qmake .
-      
-    - name: Build
-      run: |
-        if [ runner.os == 'Linux' ]; then
-          nmake
-        else
-          make
-        fi
+    
+    - name: Build on Windows
+      if: runner.os == 'Windows'
+      run: nmake
+
+    - name: Build on MacOs
+      if: runner.os == 'macOS'
+      run: make
+
+    - name: Build on Linux
+      if: runner.os == 'Linux'
+      run: make
