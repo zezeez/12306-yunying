@@ -22,7 +22,11 @@ jobs:
         host: 'linux'
         target: 'desktop'
         modules: 'qtcharts qtmultimedia'
-        
+
+    - name: Patch yunying
+      run: |
+        sed -i "s/^DEFINES += HAS_CDN/# DEFINES += HAS_CDN/" yunying.pro
+    
     - name: Install dependencies
       run: |
         sudo apt-get update
