@@ -9,24 +9,24 @@ on:
 
 jobs:
   build:
-    name: Build Qt for macOS arm64
+    name: 编译苹果版本 APP (arm64)
     runs-on: macos-14
 
     steps:
-      - name: Checkout code
+      - name: 拉取代码
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: 安装 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install py7zr in isolated environment
+      - name: 安装 py7zr in isolated environment
         run: |
           python -m pip install --upgrade pip
           python -m pip install py7zr==0.20.*
 
-      - name: Install Qt (with charts & multimedia)
+      - name: 安装Qt（带图表和多媒体）
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.1'
@@ -35,18 +35,18 @@ jobs:
           arch: 'clang_64'
           modules: 'qtcharts qtmultimedia'
 
-      - name: Build project for arm64
+      - name: 构建 arm64 项目
         run: |
           echo "QMAKE_APPLE_DEVICE_ARCHS = arm64" >> arm64.conf
           qmake yunying.pro QMAKE_EXTRA_CONF=arm64.conf
           make -j$(sysctl -n hw.logicalcpu)
 
-      - name: List all .app bundles and binaries
+      - name: 列出所有.app捆绑包和二进制文件
         run: |
           find . -name "*.app" -print
           find . -type f -perm +111
 
-      - name: Deploy .app with macdeployqt (if exists)
+      - name: 使用macdeployqt部署.app（如果存在）
         run: |
           APP_PATH=$(find . -maxdepth 1 -name "yunying.app" | head -n 1)
           if [ -d "$APP_PATH" ]; then
@@ -55,7 +55,7 @@ jobs:
             echo "yunying.app not found, skip macdeployqt"
           fi
 
-      - name: Upload Artifact (.app)
+      - name: 上传人工制品（.app）
         uses: actions/upload-artifact@v4
         with:
           name: yunying-macos-arm64
