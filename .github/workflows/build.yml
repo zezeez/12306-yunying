@@ -7,9 +7,12 @@ on:
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    name: Build and Test with GUI
+  build-package:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    name: Build and Package on ${{ matrix.os }}
     
     steps:
     - name: Checkout code
