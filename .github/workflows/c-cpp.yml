@@ -46,7 +46,7 @@ jobs:
             echo "yuny.app not found, skip macdeployqt"
           fi
 
-      - name: 压缩 yuny.app
+      - name: 压缩 yuny.app 为 zip
         run: |
           APP_PATH=$(find . -name "yuny.app" | head -n 1)
           if [ -d "$APP_PATH" ]; then
@@ -56,9 +56,21 @@ jobs:
             exit 1
           fi
 
-      - name: 上传压缩包
+      - name: 生成 yuny-macos-arm64.dmg
+        run: |
+          APP_PATH=$(find . -name "yuny.app" | head -n 1)
+          if [ -d "$APP_PATH" ]; then
+            hdiutil create -volname "yunying" -srcfolder "$APP_PATH" -ov -format UDZO yunying-macos-arm64.dmg
+          else
+            echo "yuny.app not found"
+            exit 1
+          fi
+
+      - name: 上传压缩包和 DMG
         uses: actions/upload-artifact@v4
         with:
           name: yunying-macos-arm64
-          path: yunying-macos-arm64.zip
+          path: |
+            yunying-macos-arm64.zip
+            yunying-macos-arm64.dmg
           if-no-files-found: error
