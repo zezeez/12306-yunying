@@ -30,11 +30,45 @@ jobs:
     - name: Print event
       run: |
         echo "github.event: toJSON(github.event)"
-        
+
+    # 仅在 Windows 上设置 MSVC 2019
+    - name: Setup MSVC 2019 (Windows only)
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+        toolset: 14.29  # MSVC 2019 (v142)
+
+    # 验证 MSVC 2019 是否可用（仅 Windows）
+    - name: Check cl.exe (Windows only)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        where cl
+        cl /?
+        if %errorlevel% neq 0 (
+          echo "Error: MSVC 2019 (cl.exe) not found!"
+          exit /b 1
+        )
+        echo "MSVC 2019 is ready!"
+
+    # 其他平台的逻辑（可选）
+    - name: Linux-specific step
+      if: runner.os == 'Linux'
+      run: echo "Running on Linux"
+
+    - name: macOS-specific step
+      if: runner.os == 'macOS'
+      run: echo "Running on macOS"
+    
     - name: Configure with qmake
       run: |
         qmake .
-        
+      
     - name: Build
       run: |
-        make
+        if [ runner.os == 'Linux' ]; then
+          nmake
+        else
+          make
+        fi
