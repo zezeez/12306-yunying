@@ -9,24 +9,14 @@ on:
 
 jobs:
   build:
-    name: 编译苹果版本 APP (arm64)
+    name: macOS arm64 编译
     runs-on: macos-14
 
     steps:
       - name: 拉取代码
         uses: actions/checkout@v4
 
-      - name: 安装 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 安装 py7zr
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install py7zr==0.20.*
-
-      - name: 安装 Qt（Charts + Multimedia）
+      - name: 安装 Qt（带图表和多媒体）
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.1'
@@ -41,25 +31,34 @@ jobs:
           qmake yunying.pro QMAKE_EXTRA_CONF=arm64.conf
           make -j$(sysctl -n hw.logicalcpu)
 
-      - name: 列出 .app 捆绑包
+      - name: 列出所有文件和目录
+        run: ls -lR
+
+      - name: 查找 .app 产物
         run: find . -name "*.app" -print
 
-      - name: 打包 .app（macdeployqt）
+      - name: (可选) 用 macdeployqt 打包
         run: |
-          if [ -d "yunying.app" ]; then
-            /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt yunying.app
+          APP_PATH=$(find . -name "yunying.app" | head -n 1)
+          if [ -d "$APP_PATH" ]; then
+            /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt "$APP_PATH"
+          else
+            echo "yunying.app not found, skip macdeployqt"
+          fi
+
+      - name: 压缩 yunying.app
+        run: |
+          APP_PATH=$(find . -name "yunying.app" | head -n 1)
+          if [ -d "$APP_PATH" ]; then
+            zip -r yunying-macos-arm64.zip "$APP_PATH"
           else
             echo "yunying.app not found"
             exit 1
           fi
 
-      - name: 压缩 yunying.app 为 7z
-        run: |
-          python -m py7zr compress yunying.app yunying-macos-arm64.7z
-
-      - name: 上传 7z 压缩包
+      - name: 上传压缩包
         uses: actions/upload-artifact@v4
         with:
           name: yunying-macos-arm64
-          path: yunying-macos-arm64.7z
+          path: yunying-macos-arm64.zip
           if-no-files-found: error
