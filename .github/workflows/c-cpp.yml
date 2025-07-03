@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: macOS arm64 编译
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: 拉取代码
