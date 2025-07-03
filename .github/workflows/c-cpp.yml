@@ -1,4 +1,4 @@
-name: WanZhen Qt macOS Build (arm64)
+name: Qt macOS Build (arm64)
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Qt for macOS arm64 (WanZhen)
+    name: Build Qt for macOS arm64
     runs-on: macos-14
 
     steps:
@@ -41,16 +41,23 @@ jobs:
           qmake yunying.pro QMAKE_EXTRA_CONF=arm64.conf
           make -j$(sysctl -n hw.logicalcpu)
 
-      - name: List all app bundles
-        run: find . -name "*.app" -print
-
-      - name: Deploy .app with macdeployqt
+      - name: List all .app bundles and binaries
         run: |
-          /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt $(find . -name "*.app" | head -n 1)
+          find . -name "*.app" -print
+          find . -type f -perm +111
 
-      - name: Upload Artifact
+      - name: Deploy .app with macdeployqt (if exists)
+        run: |
+          APP_PATH=$(find . -maxdepth 1 -name "yunying.app" | head -n 1)
+          if [ -d "$APP_PATH" ]; then
+            /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt "$APP_PATH"
+          else
+            echo "yunying.app not found, skip macdeployqt"
+          fi
+
+      - name: Upload Artifact (.app)
         uses: actions/upload-artifact@v4
         with:
-          name: wanzhen-macos-arm64
-          path: |
-            $(find . -name "*.app" | head -n 1)
+          name: yunying-macos-arm64
+          path: yunying.app
+          if-no-files-found: warn
