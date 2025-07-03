@@ -23,9 +23,9 @@ jobs:
         target: 'desktop'
         modules: 'qtcharts qtmultimedia'
 
-    - name: Patch yunying
-      run: |
-        sed -i "s/^DEFINES += HAS_CDN/# DEFINES += HAS_CDN/" yunying.pro
+    - name: Comment out HAS_CDN using Perl
+      shell: bash
+      run: perl -i -pe 's/^DEFINES \+= HAS_CDN/# DEFINES += HAS_CDN/' yunying.pro
     
     - name: Print event
       run: |
