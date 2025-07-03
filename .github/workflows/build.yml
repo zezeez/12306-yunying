@@ -1,0 +1,40 @@
+name: Qt GUI CI
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0)
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Test with GUI
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.6.2'
+        host: 'linux'
+        target: 'desktop'
+        modules: 'qtcharts qtmultimedia'
+        tools: true
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake xvfb
+        echo "github.event: toJSON(github.event)"
+        
+    - name: Configure with qmake
+      run: |
+        qmake .
+        
+    - name: Build
+      run: |
+        echo "cores: ${env.CORE}"
+        make -j ${env.CORE}
