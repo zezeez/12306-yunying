@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: macOS arm64 编译
-    runs-on: macos-15
+    runs-on: macos-14
 
     steps:
       - name: 拉取代码
@@ -37,13 +37,20 @@ jobs:
       - name: 查找 .app 产物
         run: find . -name "*.app" -print
 
-      - name: (可选) 用 macdeployqt 打包
+      - name: 用 macdeployqt 打包
         run: |
           APP_PATH=$(find . -name "yuny.app" | head -n 1)
+          MACDEPLOYQT=$(find $Qt6_DIR -type f -name macdeployqt | head -n 1)
           if [ -d "$APP_PATH" ]; then
-            /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt "$APP_PATH"
+            if [ -x "$MACDEPLOYQT" ]; then
+              "$MACDEPLOYQT" "$APP_PATH"
+            else
+              echo "macdeployqt not found"
+              exit 1
+            fi
           else
             echo "yuny.app not found, skip macdeployqt"
+            exit 1
           fi
 
       - name: 压缩 yuny.app 为 zip
@@ -66,7 +73,7 @@ jobs:
             exit 1
           fi
 
-      - name: 上传压缩包和 DMG
+      - name: 上传 zip 和 dmg
         uses: actions/upload-artifact@v4
         with:
           name: yunying-macos-arm64
