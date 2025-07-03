@@ -21,12 +21,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: 安装 py7zr in isolated environment
+      - name: 安装 py7zr
         run: |
           python -m pip install --upgrade pip
           python -m pip install py7zr==0.20.*
 
-      - name: 安装Qt（带图表和多媒体）
+      - name: 安装 Qt（Charts + Multimedia）
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.1'
@@ -41,23 +41,25 @@ jobs:
           qmake yunying.pro QMAKE_EXTRA_CONF=arm64.conf
           make -j$(sysctl -n hw.logicalcpu)
 
-      - name: 列出所有.app捆绑包和二进制文件
-        run: |
-          find . -name "*.app" -print
-          find . -type f -perm +111
+      - name: 列出 .app 捆绑包
+        run: find . -name "*.app" -print
 
-      - name: 使用macdeployqt部署.app（如果存在）
+      - name: 打包 .app（macdeployqt）
         run: |
-          APP_PATH=$(find . -maxdepth 1 -name "yunying.app" | head -n 1)
-          if [ -d "$APP_PATH" ]; then
-            /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt "$APP_PATH"
+          if [ -d "yunying.app" ]; then
+            /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt yunying.app
           else
-            echo "yunying.app not found, skip macdeployqt"
+            echo "yunying.app not found"
+            exit 1
           fi
 
-      - name: 上传人工制品（.app）
+      - name: 压缩 yunying.app 为 7z
+        run: |
+          python -m py7zr compress yunying.app yunying-macos-arm64.7z
+
+      - name: 上传 7z 压缩包
         uses: actions/upload-artifact@v4
         with:
           name: yunying-macos-arm64
-          path: yunying.app
-          if-no-files-found: warn
+          path: yunying-macos-arm64.7z
+          if-no-files-found: error
