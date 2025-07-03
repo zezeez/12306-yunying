@@ -35,7 +35,6 @@ jobs:
           host: 'mac'
           target: 'desktop'
           arch: 'clang_64'
-          modules: 'qtbase'
 
       # ✅ 构建项目（你使用 yunying.pro）
       - name: Build project for arm64
