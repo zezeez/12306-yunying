@@ -19,7 +19,7 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: '6.6.2'
-        host: ${{ startsWith(matrix.os, 'macos') && 'mac' || startsWith(matrix.os, 'windows') && 'win' || 'linux' }}
+        host: ${{ startsWith(matrix.os, 'macos') && 'mac' || startsWith(matrix.os, 'windows') && 'windows' || 'linux' }}
         target: 'desktop'
         modules: 'qtcharts qtmultimedia'
 
@@ -27,7 +27,7 @@ jobs:
       run: |
         sed -i "s/^DEFINES += HAS_CDN/# DEFINES += HAS_CDN/" yunying.pro
     
-    - name: Install dependencies
+    - name: Print event
       run: |
         echo "github.event: toJSON(github.event)"
         
