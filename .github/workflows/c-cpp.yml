@@ -1,5 +1,3 @@
-# .github/workflows/build-arm64.yml
-
 name: Qt macOS Build (arm64)
 
 on:
@@ -7,44 +5,53 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch:  # ← 手动触发按钮
 
 jobs:
   build:
-    name: Build 12306-yunying for macOS arm64
-    runs-on: macos-15
+    name: Build Qt for macOS arm64
+    runs-on: macos-14
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ✅ 设置独立 Python 环境（规避 PEP 668 问题）
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install py7zr in isolated environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install py7zr==0.20.*
+
+      # ✅ 安装 Qt
       - name: Install Qt (universal2)
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.6.1'           # 建议使用 Qt 6 的 universal2 构建
+          version: '6.6.1'
           host: 'mac'
           target: 'desktop'
-          arch: 'clang_64'          # 实际包含 universal2 版本（x86_64+arm64）
+          arch: 'clang_64'
           modules: 'qtbase'
-          setup-python: false
 
-      - name: Prepare environment
+      # ✅ 构建项目（你使用 yunying.pro）
+      - name: Build project for arm64
         run: |
-          echo "QMAKE_MAC_SDK = macosx" >> arm64.conf
           echo "QMAKE_APPLE_DEVICE_ARCHS = arm64" >> arm64.conf
-
-      - name: Build with qmake for arm64
-        run: |
-          qmake CONFIG+=release QMAKE_SPEC=macx-clang QMAKE_EXTRA_CONF=arm64.conf
+          qmake yunying.pro QMAKE_EXTRA_CONF=arm64.conf
           make -j$(sysctl -n hw.logicalcpu)
 
+      # ✅ 检查产物架构（可选）
       - name: Check architecture
         run: |
-          file your_binary_or_app/Contents/MacOS/your_executable
+          file ./build/yunying || echo "Binary not found"
 
-      - name: Upload Build Artifact
+      # ✅ 上传产物（调整为你的实际产物路径）
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-arm64-build
-          path: |
-            ./build/yunying
+          name: yunying-macos-arm64
+          path: ./build/yunying.app
