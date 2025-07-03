@@ -35,5 +35,4 @@ jobs:
         
     - name: Build
       run: |
-        echo "cores: ${env.CORE}"
-        make -j ${env.CORE}
+        make
