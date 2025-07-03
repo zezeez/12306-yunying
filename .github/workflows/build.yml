@@ -22,7 +22,6 @@ jobs:
         host: 'linux'
         target: 'desktop'
         modules: 'qtcharts qtmultimedia'
-        tools: true
         
     - name: Install dependencies
       run: |
