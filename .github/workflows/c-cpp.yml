@@ -1,22 +1,21 @@
-name: Qt macOS Build (arm64)
+name: WanZhen Qt macOS Build (arm64)
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:  # ← 手动触发按钮
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build Qt for macOS arm64
+    name: Build Qt for macOS arm64 (WanZhen)
     runs-on: macos-14
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ✅ 设置独立 Python 环境（规避 PEP 668 问题）
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -27,8 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install py7zr==0.20.*
 
-      # ✅ 安装 Qt
-      - name: Install Qt (universal2)
+      - name: Install Qt (with charts & multimedia)
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.1'
@@ -37,21 +35,22 @@ jobs:
           arch: 'clang_64'
           modules: 'qtcharts qtmultimedia'
 
-      # ✅ 构建项目（你使用 yunying.pro）
       - name: Build project for arm64
         run: |
           echo "QMAKE_APPLE_DEVICE_ARCHS = arm64" >> arm64.conf
           qmake yunying.pro QMAKE_EXTRA_CONF=arm64.conf
           make -j$(sysctl -n hw.logicalcpu)
 
-      # ✅ 检查产物架构（可选）
-      - name: Check architecture
-        run: |
-          file ./build/yunying || echo "Binary not found"
+      - name: List all app bundles
+        run: find . -name "*.app" -print
 
-      # ✅ 上传产物（调整为你的实际产物路径）
+      - name: Deploy .app with macdeployqt
+        run: |
+          /Users/runner/work/${{ github.repository }}/Qt/6.6.1/macos/bin/macdeployqt $(find . -name "*.app" | head -n 1)
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yunying-macos-arm64
-          path: ./build/yunying.app
+          name: wanzhen-macos-arm64
+          path: |
+            $(find . -name "*.app" | head -n 1)
