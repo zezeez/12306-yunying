@@ -1,0 +1,111 @@
+name: Release Pipeline
+
+on:
+  create:
+    tags:
+      - 'v*'       # 匹配 v 开头的标签 (如 v1.0.0)
+      - 'release-*' # 或 release- 开头的标签 (如 release-2023-10)
+
+jobs:
+  create_release:
+    name: "🗃️️ Prepare release"
+    permissions:
+      contents: write # for actions/create-release to create a release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG }}
+          release_name: Release v${{ env.VERSION }}
+          body: ${{ env.RELEASE_TEXT }}
+          # we want other build systems to immediately use this release after we uploaded the source archive
+          draft: false
+          prerelease: false
+
+  build-and-publish-linux-appimage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # 获取完整历史记录，包括标签信息
+          
+      - name: Get version from tag
+        id: get_version
+        run: |
+          # 提取标签中的版本号 (去除前缀)
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}  # 去除v前缀
+          VERSION=${VERSION#release-}  # 去除release-前缀
+          echo "Extracted version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup environment
+        run: |
+          echo "Running release pipeline for version ${{ steps.get_version.outputs.version }}"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          host: 'linux'
+          target: 'desktop'
+          modules: 'qtcharts qtmultimedia'
+
+      - name: Comment out HAS_CDN using Perl
+        shell: bash
+        run: perl -i -pe 's/^DEFINES \+= HAS_CDN/# DEFINES += HAS_CDN/' yunying.pro
+      - name: Build project
+        run: |
+            # 这里添加你的构建命令
+            echo "Building version ${{ steps.get_version.outputs.version }}..."
+            # 示例: make build VERSION=${{ steps.get_version.outputs.version }}
+
+      - name: Configure with qmake
+        run: |
+          qmake .
+
+      - name: Build on Linux
+        run: |
+          make
+
+      - name: "⚙️ Install linuxdeploy"
+        run: |
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
+      - name: "📦 Create AppImage"
+        run: |
+          cp ../icons/icon.png yuny.png
+          ./linuxdeploy-x86_64.AppImage --appdir build -e yuny -i yuny.png -d yy.yuny.desktop --plugin qt
+          ./linuxdeploy-x86_64.AppImage --appdir build --output appimage
+          rm linuxdeploy-x86_64.AppImage
+          rm linuxdeploy-plugin-qt-x86_64.AppImage
+          ls -hal *.AppImage
+          find -iname "*.AppImage"
+          mv *.AppImage yuny-x86_64.AppImage || true
+          sha256sum yuny-x86_64.AppImage > yuny-x86_64.AppImage.sha256sum
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: |
+            Automated release created from tag ${{ github.ref }}
+            Commit: ${{ github.sha }}
+          files: |
+            build/*.zip
+            build/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
