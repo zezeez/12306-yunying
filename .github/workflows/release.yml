@@ -87,7 +87,7 @@ jobs:
           chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
       - name: "📦 Create AppImage"
         run: |
-          cp ../icons/icon.png yuny.png
+          cp icons/icon.png yuny.png
           ./linuxdeploy-x86_64.AppImage --appdir build -e yuny -i yuny.png -d yy.yuny.desktop --plugin qt
           ./linuxdeploy-x86_64.AppImage --appdir build --output appimage
           rm linuxdeploy-x86_64.AppImage
@@ -122,11 +122,7 @@ jobs:
         id: get_version
         run: |
           # 提取标签中的版本号 (去除前缀)
-          VERSION=${GITHUB_REF#refs/tags/}
-          VERSION=${VERSION#v}  # 去除v前缀
-          VERSION=${VERSION#release-}  # 去除release-前缀
-          echo "Extracted version: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=${{ GITHUB_REF }}
 
       - name: Setup environment
         run: |
@@ -261,7 +257,7 @@ jobs:
         run: |
           APP=QOwnNotes
           TEMPDIR=$APP
-          cp ../icons/icon.png yuny.png
+          cp icons/icon.png yuny.png
 
           echo "Calling macdeployqt"
           ${QT_ROOT_DIR}/bin/macdeployqt ./$APP.app
