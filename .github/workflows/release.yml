@@ -5,6 +5,7 @@ on:
     tags:
       - 'v*'       # 匹配 v 开头的标签 (如 v1.0.0)
       - 'release-*' # 或 release- 开头的标签 (如 release-2023-10)
+  workflow_dispatch:
 
 jobs:
   create_release:
@@ -105,7 +106,221 @@ jobs:
             Automated release created from tag ${{ github.ref }}
             Commit: ${{ github.sha }}
           files: |
-            build/*.zip
-            build/*.tar.gz
+            yuny-x86_64.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-publish-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # 获取完整历史记录，包括标签信息
+          
+      - name: Get version from tag
+        id: get_version
+        run: |
+          # 提取标签中的版本号 (去除前缀)
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}  # 去除v前缀
+          VERSION=${VERSION#release-}  # 去除release-前缀
+          echo "Extracted version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup environment
+        run: |
+          echo "Running release pipeline for version ${{ steps.get_version.outputs.version }}"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          host: 'windows'
+          target: 'desktop'
+          modules: 'qtcharts qtmultimedia'
+
+      - name: Comment out HAS_CDN using Perl
+        shell: bash
+        run: perl -i -pe 's/^DEFINES \+= HAS_CDN/# DEFINES += HAS_CDN/' yunying.pro
+      - name: Build project
+        run: |
+            # 这里添加你的构建命令
+            echo "Building version ${{ steps.get_version.outputs.version }}..."
+            # 示例: make build VERSION=${{ steps.get_version.outputs.version }}
+
+       # 仅在 Windows 上设置 MSVC 2019
+      - name: Setup MSVC 2019 (Windows only)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          toolset: 14.29  # MSVC 2019 (v142)
+  
+      # 验证 MSVC 2019 是否可用（仅 Windows）
+      - name: Check cl.exe (Windows only)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          where cl
+          cl /?
+          if %errorlevel% neq 0 (
+            echo "Error: MSVC 2019 (cl.exe) not found!"
+            exit /b 1
+          )
+          echo "MSVC 2019 is ready!"
+        
+      - name: Configure with qmake
+        run: |
+          qmake .
+      - name: Build on Windows
+        run: |
+          nmake
+
+      - name: Package Project
+        run: |
+          New-Item -Path "..\yuny_${{ steps.get_version.outputs.version }}" -ItemType 'Directory'
+          Copy-Item yuny.exe "..\yuny_${{ steps.get_version.outputs.version }}"
+          Set-Location "..\yuny_${{ steps.get_version.outputs.version }}"
+          Copy-Item ..\icons\icon.png yuny.png
+          windeloyqt yuny.exe
+          New-Item -Path "..\pkgTemp" -ItemType 'Directory'
+          Set-Location "..\pkgTemp"
+          curl -o 7z.exe https://github.com/ip7z/7zip/releases/download/25.00/7z2500-x64.exe
+          curl -o 7zip.7z https://github.com/ip7z/7zip/releases/download/25.00/7z2500-extra.7z
+          .\7z.exe -x 7zip.7z
+          Set-Location "..\yuny_${{ steps.get_version.outputs.version }}"
+          Copy-Item ..\pkgTemp\x64\7za.dll .
+          Copy-Item ..\pkgTemp\x64\7za.exe .
+          Copy-Item ..\pkgTemp\x64\7zxa.dll .
+          Set-Location ..
+          .\pkgTemp\7z.exe -tzip "..\yuny_${{ steps.get_version.outputs.version }}".zip "..\yuny_${{ steps.get_version.outputs.version }}"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: |
+            Automated release created from tag ${{ github.ref }}
+            Commit: ${{ github.sha }}
+          files: |
+            "..\yuny_${{ steps.get_version.outputs.version }}".zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-publish-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # 获取完整历史记录，包括标签信息
+          
+      - name: Get version from tag
+        id: get_version
+        run: |
+          # 提取标签中的版本号 (去除前缀)
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}  # 去除v前缀
+          VERSION=${VERSION#release-}  # 去除release-前缀
+          echo "Extracted version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup environment
+        run: |
+          echo "Running release pipeline for version ${{ steps.get_version.outputs.version }}"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          host: 'mac'
+          target: 'desktop'
+          modules: 'qtcharts qtmultimedia'
+
+      - name: Comment out HAS_CDN using Perl
+        shell: bash
+        run: perl -i -pe 's/^DEFINES \+= HAS_CDN/# DEFINES += HAS_CDN/' yunying.pro
+      - name: Build project
+        run: |
+            # 这里添加你的构建命令
+            echo "Building version ${{ steps.get_version.outputs.version }}..."
+            # 示例: make build VERSION=${{ steps.get_version.outputs.version }}
+
+      - name: Configure with qmake
+        run: |
+          qmake .
+
+      - name: Build on Macos
+        run: |
+          make
+
+      - name: Package Project
+        run: |
+          APP=QOwnNotes
+          TEMPDIR=$APP
+          cp ../icons/icon.png yuny.png
+
+          echo "Calling macdeployqt"
+          ${QT_ROOT_DIR}/bin/macdeployqt ./$APP.app
+
+          mkdir -p $TEMPDIR
+          if [ "$?" -ne "0" ]; then
+            echo "Failed to create temporary folder"
+            exit 1
+          fi
+          
+          echo "Clean $TEMPDIR"
+          #Delete the contents of any previous builds
+          rm -Rf ./$TEMPDIR/*
+          if [ "$?" -ne "0" ]; then
+            echo "Failed to clean temporary folder"
+            exit 1
+          fi
+          
+          echo "Move application bundle"
+          #Move the application to the temporary directory
+          mv ./$APP.app ./$TEMPDIR
+          if [ "$?" -ne "0" ]; then
+            echo "Failed to move application bundle"
+            exit 1
+          fi
+          
+          echo "Create symbolic link"
+          #Create a symbolic link to the applications folder
+          ln -s /Applications ./$TEMPDIR/Applications
+          if [ "$?" -ne "0" ]; then
+            echo "Failed to create link to /Applications"
+            exit 1
+          fi
+          
+          echo "Create new disk image"
+          #Create the disk image
+          rm -f ./$APP.dmg
+          hdiutil create -srcfolder ./$TEMPDIR -ov -format UDBZ -fs HFS+ ./$APP.dmg
+          if [ "$?" -ne "0" ]; then
+            echo "Failed to create disk image"
+            exit 1
+          fi
+          
+          # delete the temporary directory
+          rm -Rf ./$TEMPDIR/*
+          if [ "$?" -ne "0" ]; then
+            echo "Failed to clean temporary folder"
+            exit 1
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: |
+            Automated release created from tag ${{ github.ref }}
+            Commit: ${{ github.sha }}
+          files: |
+            yuny.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
