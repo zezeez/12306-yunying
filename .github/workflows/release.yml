@@ -87,7 +87,7 @@ jobs:
           chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
       - name: "📦 Create AppImage"
         run: |
-          cp icons/icon.png yuny.png
+          cp images/yy.png yuny.png
           ./linuxdeploy-x86_64.AppImage --appdir build -e yuny -i yuny.png -d yy.yuny.desktop --plugin qt
           ./linuxdeploy-x86_64.AppImage --appdir build --output appimage
           rm linuxdeploy-x86_64.AppImage
@@ -107,6 +107,7 @@ jobs:
             Commit: ${{ github.sha }}
           files: |
             yuny-x86_64.AppImage
+            yuny-x86_64.AppImage.sha256sum
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -121,14 +122,8 @@ jobs:
       - name: Get version from tag
         id: get_version
         run: |
-          # 提取标签中的版本号 (去除前缀)
-          VERSION=${GITHUB_REF}
+          $env:VERSION = $env:GITHUB_REF
 
-      - name: Setup environment
-        run: |
-          echo "Running release pipeline for version ${{ steps.get_version.outputs.version }}"
-          echo "GITHUB_REF: $GITHUB_REF"
-          echo "GITHUB_SHA: $GITHUB_SHA"
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -143,7 +138,7 @@ jobs:
       - name: Build project
         run: |
             # 这里添加你的构建命令
-            echo "Building version ${{ steps.get_version.outputs.version }}..."
+            #echo "Building version ${{ steps.get_version.outputs.version }}..."
             # 示例: make build VERSION=${{ steps.get_version.outputs.version }}
 
        # 仅在 Windows 上设置 MSVC 2019
@@ -190,7 +185,7 @@ jobs:
           Copy-Item ..\pkgTemp\x64\7za.exe .
           Copy-Item ..\pkgTemp\x64\7zxa.dll .
           Set-Location ..
-          .\pkgTemp\7z.exe -tzip "..\yuny_${{ steps.get_version.outputs.version }}".zip "..\yuny_${{ steps.get_version.outputs.version }}"
+          .\pkgTemp\7z.exe -tzip "..\yuny_$env:VERSION".zip "..\yuny_$env:VERSION"
 
       - name: Publish release
         uses: softprops/action-gh-release@v1
@@ -201,7 +196,7 @@ jobs:
             Automated release created from tag ${{ github.ref }}
             Commit: ${{ github.sha }}
           files: |
-            "..\yuny_${{ steps.get_version.outputs.version }}".zip
+            "..\yuny_$env:VERSION".zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -257,7 +252,7 @@ jobs:
         run: |
           APP=QOwnNotes
           TEMPDIR=$APP
-          cp icons/icon.png yuny.png
+          cp images/yy.png yuny.png
 
           echo "Calling macdeployqt"
           ${QT_ROOT_DIR}/bin/macdeployqt ./$APP.app
