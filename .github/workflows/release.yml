@@ -122,7 +122,7 @@ jobs:
         id: get_version
         run: |
           # 提取标签中的版本号 (去除前缀)
-          VERSION=${{ GITHUB_REF }}
+          VERSION=${GITHUB_REF}
 
       - name: Setup environment
         run: |
