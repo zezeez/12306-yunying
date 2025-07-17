@@ -62,6 +62,12 @@ jobs:
           target: 'desktop'
           modules: 'qtcharts qtmultimedia'
 
+      - name: "⚙️ Install dependencies"
+        run: |
+          sudo apt-get update
+          # sudo apt-get install libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libzstd-dev
+          sudo apt install desktop-file-utils libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-composite0 libxcb-cursor0 libxcb-damage0 libxcb-dpms0 libxcb-dri2-0 libxcb-dri3-0 libxcb-ewmh2 libxcb-glx0 libxcb-present0 libxcb-randr0 libxcb-record0 libxcb-render0 libxcb-res0 libxcb-screensaver0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-util1 libxkbcommon-x11-0
+      
       - name: Comment out HAS_CDN using Perl
         shell: bash
         run: perl -i -pe 's/^DEFINES \+= HAS_CDN/# DEFINES += HAS_CDN/' yunying.pro
@@ -223,6 +229,7 @@ jobs:
           echo "Running release pipeline for version ${{ steps.get_version.outputs.version }}"
           echo "GITHUB_REF: $GITHUB_REF"
           echo "GITHUB_SHA: $GITHUB_SHA"
+      
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -250,7 +257,7 @@ jobs:
 
       - name: Package Project
         run: |
-          APP=QOwnNotes
+          APP=yuny
           TEMPDIR=$APP
           cp images/yy.png yuny.png
 
