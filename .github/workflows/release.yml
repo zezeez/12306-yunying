@@ -249,7 +249,7 @@ jobs:
 
       - name: Configure with qmake
         run: |
-          qmake .
+          qmake . CONFIG+=release QMAKE_APPLE_DEVICE_ARCHS="x86_64 arm64"
 
       - name: Build on Macos
         run: |
@@ -262,7 +262,7 @@ jobs:
           cp images/yy.png yuny.png
 
           echo "Calling macdeployqt"
-          ${QT_ROOT_DIR}/bin/macdeployqt ./$APP.app
+          ${Qt6_DIR}/bin/macdeployqt ./$APP.app
 
           mkdir -p $TEMPDIR
           if [ "$?" -ne "0" ]; then
