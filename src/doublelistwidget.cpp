@@ -85,7 +85,7 @@ void DoubleListWidget::addLeftItem(const QString &text, enum Qt::MatchFlag flag)
     if (itemList.isEmpty()) {
         item = new QListWidgetItem;
     } else {
-        item = rightListWidget->takeItem(rightListWidget->currentRow());
+        item = rightListWidget->takeItem(rightListWidget->row(itemList[0]));
     }
     item->setText(text);
     addLeftItem(item);
@@ -127,7 +127,7 @@ void DoubleListWidget::addRightItem(const QString &text,  enum Qt::MatchFlag fla
     if (itemList.isEmpty()) {
         item = new QListWidgetItem;
     } else {
-        item = leftListWidget->takeItem(leftListWidget->currentRow());
+        item = leftListWidget->takeItem(leftListWidget->row(itemList[0]));
     }
     item->setText(text);
     addRightItem(item);
