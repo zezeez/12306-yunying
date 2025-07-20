@@ -231,11 +231,12 @@ void NetHelper::anyPost(const QUrl &url, ReqParam &param, NetHelper::replyCallBa
     rttMap.insert(reply, time.toMSecsSinceEpoch());
 }
 
-void NetHelper::get(const QUrl &url, replyCallBack rcb, QList<std::pair<QString, QString>> &headers)
+void NetHelper::get(const QUrl &url, replyCallBack rcb, QList<std::pair<QString, QString>> &headers, enum QUERYTYPE queryType)
 {
     QNetworkRequest request;
     request.setUrl(url);
     request.setTransferTimeout(REQUESTTIMEOUT);
+    request.setAttribute(QNetworkRequest::User, queryType);
 #ifdef HAS_CDN
     if (url.host() == _("kyfw.12306.cn")) {
         QString mainCdn = cdn.getMainCdn();
@@ -260,7 +261,13 @@ void NetHelper::get(const QUrl &url, replyCallBack rcb, QList<std::pair<QString,
 void NetHelper::get(const QUrl &url, replyCallBack rcb)
 {
     QList<std::pair<QString, QString>> headers;
-    get(url, rcb, headers);
+    get(url, rcb, headers, EQUERYDEFAULT);
+}
+
+void NetHelper::get(const QUrl &url, replyCallBack rcb, enum QUERYTYPE queryType)
+{
+    QList<std::pair<QString, QString>> headers;
+    get(url, rcb, headers, queryType);
 }
 
 void NetHelper::get2(const QUrl &url, replyCallBack rcb, QList<std::pair<QString, QString>> &headers)
@@ -1050,7 +1057,52 @@ void NetHelper::queryDiffDateTicketReply(QNetworkReply *reply)
     }
 }
 
-void NetHelper::queryTrainStopStation(const QList<QString> &args)
+void NetHelper::queryStationTicket(const QString &staFromCode, const QString &staToCode)
+{
+    QUrl url;
+    UserConfig &uc = UserData::instance()->getUserConfig();
+    QString args;
+
+    if (staFromCode == staToCode) {
+        return;
+    }
+    args = _("?leftTicketDTO.train_date=%1&leftTicketDTO.from_station=%2&leftTicketDTO.to_station=%3&purpose_codes=ADULT")
+               .arg(uc.tourDate, staFromCode, staToCode);
+    url.setUrl(queryLeftTicketUrl + args);
+
+    QList<std::pair<QString, QString>> headers;
+    headers.append(std::pair<QString, QString>("If-Modified-Since", "0"));
+    headers.append(std::pair<QString, QString>("Cache-Control", "no-cache"));
+    get2(url, &NetHelper::queryStationTicketReply, headers);
+}
+
+void NetHelper::queryStationTicketReply(QNetworkReply *reply)
+{
+    QVariantMap varMap;
+    if (replyIsOk(reply, varMap) < 0) {
+        return;
+    }
+
+    bool status = varMap[QStringLiteral("status")].toBool();
+    if (!status) {
+        QStringList messages = varMap[QStringLiteral("messages")].toStringList();
+        if (!messages.isEmpty()) {
+            w->formatOutput(_("查询失败，原因: %1").arg(messages[0]));
+        }
+        QString queryUri = varMap[_("c_url")].toString();
+        int idx = queryUri.indexOf('?');
+        if (idx != -1) {
+            QString s = queryUri.first(idx);
+            queryLeftTicketUrl = _(BASEURL PUBLICNAME) + '/' + s;
+        }
+        return;
+    }
+    QVariantMap data = varMap[QStringLiteral("data")].toMap();
+    data["requestUrl"] = reply->request().url();
+    midTrain.queryMidStationReply(data);
+}
+
+void NetHelper::queryTrainStopStation(const QList<QString> &args, enum QUERYTYPE queryType)
 {
     QUrl url;
     QString argsStr;
@@ -1060,7 +1112,7 @@ void NetHelper::queryTrainStopStation(const QList<QString> &args)
     argsStr = _("?train_no=%1&from_station_telecode=%2&to_station_telecode=%3&depart_date=%4")
                .arg(args[0], args[1], args[2], args[3]);
     url.setUrl(_(QEURYTRAINSTOPSTATION) + argsStr);
-    get(url, &NetHelper::queryTrainStopStationReply);
+    get(url, &NetHelper::queryTrainStopStationReply, queryType);
 }
 
 void NetHelper::queryTrainStopStationReply(QNetworkReply *reply)
@@ -1069,7 +1121,13 @@ void NetHelper::queryTrainStopStationReply(QNetworkReply *reply)
     if (replyIsOk(reply, varMap) < 0)
         return;
     //qDebug() << varMap;
-    w->processStopStationReply(varMap);
+
+    enum QUERYTYPE queryType = static_cast<enum QUERYTYPE>(reply->request().attribute(QNetworkRequest::User).toInt());
+    if (queryType == EQUERYSTOPSTATIONANALYSIS) {
+        midTrain.queryReply(varMap);
+    } else {
+        w->processStopStationReply(varMap);
+    }
 }
 
 void NetHelper::passportUamtk()

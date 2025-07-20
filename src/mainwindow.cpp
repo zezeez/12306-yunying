@@ -152,6 +152,11 @@ MainWindow::MainWindow(QWidget *parent) :
         skipMaintenanceTimer->start();
     });
 
+    notifyMng = new NotifyManager(this);
+    notifyMng->setCloseMode(ECLOSEMANUAL);
+
+    reQueryMidOn = true;
+
     createDockWidget();
 
     widget->setLayout(vLayout);
@@ -377,6 +382,7 @@ void MainWindow::userStartStationChanged()
     if (uc.staFromCode != laststaFromCode) {
         trainNoDialog->clearUnSelectedTrain();
         laststaFromCode = uc.staFromCode;
+        reQueryMidOn = true;  // 重新查询中间车站
     }
 
     QSettings setting;
@@ -399,6 +405,7 @@ void MainWindow::userEndStationChanged()
     if (uc.staToCode != lastStaToCode) {
         trainNoDialog->clearUnSelectedTrain();
         lastStaToCode = uc.staToCode;
+        reQueryMidOn = true;  // 重新查询中间车站
     }
 
     QSettings setting;
@@ -412,6 +419,7 @@ void MainWindow::userTourDateChanged(const QDate &date)
     trainNoDialog->clearUnSelectedTrain();
     QSettings setting;
     setting.setValue(_("query_ticket/tour_date"), strDate);
+    reQueryMidOn = true;  // 重新查询中间车站
 }
 
 void MainWindow::swapStation()
@@ -614,7 +622,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                     if (!trainNoDialog->hasTrain(trainDesc)) {
                         if (canAddNewTrain(trainInfo[ESTARTTIME])) {
                             // 选了接受增开列车，自动加到已选列表
-                            trainNoDialog->addTrain(trainDesc);
+                            trainNoDialog->addTrain(trainDesc, trainInfo[ETRAINNO]);
                             trainNoDialog->addSelectedTrain(_("%1 (%2 %3").arg(trainInfo[ESTATIONTRAINCODE],
                                                                                fromStationName,
                                                                                toStationName));
@@ -684,6 +692,16 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                         NetHelper::instance()->checkUser();
                     } else {
                         formatOutput(_("生成车票提交信息失败"));
+                    }
+                } else {
+                    if (ud->grabSetting.queryMidStation && reQueryMidOn) {
+                        reQueryMidOn = false;
+                        NetHelper *nh = NetHelper::instance();
+                        if (!nh->midTrain.isEmpty()) {
+                            nh->midTrain.clear();
+                        }
+                        nh->midTrain.initTrain();
+                        nh->midTrain.start();
                     }
                 }
             }
@@ -1017,7 +1035,7 @@ void MainWindow::processQueryTicketReply(QVariantMap &data)
                                                                  toStationName,
                                                                  trainInfo[ESTARTTIME],
                                                                  trainInfo[EARRIVETIME],
-                                                                 trainInfo[ESPENDTIME]));
+                                                                 trainInfo[ESPENDTIME]), trainInfo[ETRAINNO]);
         }
 
         tableSeatTypeItems.clear();
@@ -1170,7 +1188,7 @@ void MainWindow::queryTrainStopStation()
         if (args.size() == columns.size()) {
             if (!ud->getUserConfig().tourDate.isEmpty()) {
                 args.push_back(ud->getUserConfig().tourDate);
-                NetHelper::instance()->queryTrainStopStation(args);
+                NetHelper::instance()->queryTrainStopStation(args, EQUERYSTOPSTATIONSHOW);
             }
         }
     }

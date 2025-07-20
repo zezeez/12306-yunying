@@ -29,6 +29,7 @@
 #include "selltimequerydialog.h"
 #include "upgrademanager.h"
 #include "completeedit.h"
+#include "lib/qt-notify/notifymanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -166,9 +167,11 @@ public:
     LineChartView *delayChart;
     LineChartView *latencyChart;
 
-    Ntp ntp;
+    Ntp ntp;  // Ntp网络时间同步
 
-    UpgradeManager upgradeMng;
+    UpgradeManager upgradeMng;  // 版本更新处理器
+    NotifyManager *notifyMng; // 消息通知管理器
+    bool reQueryMidOn;  // 是否需要重新查询中间车站，出发站/到达站/乘车日期 变化需要重新查询
 };
 
 #endif // MAINWINDOW_H

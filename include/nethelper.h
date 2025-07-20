@@ -15,6 +15,13 @@
 #include <cdn.h>
 #endif
 #include "serverip.h"
+#include "midstation.h"
+
+enum QUERYTYPE {
+    EQUERYDEFAULT,
+    EQUERYSTOPSTATIONSHOW,
+    EQUERYSTOPSTATIONANALYSIS,
+};
 
 class QNetworkReply;
 
@@ -60,7 +67,8 @@ public:
     void post(const QUrl &url, ReqParam &param, replyCallBack rcb, QList<std::pair<QString, QString>> &headers);
     void anyPost(const QUrl &url, ReqParam &param, replyCallBack rcb);
     void get(const QUrl &url, replyCallBack rcb);
-    void get(const QUrl &url, replyCallBack rcb, QList<std::pair<QString, QString>> &headers);
+    void get(const QUrl &url, replyCallBack rcb, QList<std::pair<QString, QString>> &headers, enum QUERYTYPE queryType);
+    void get(const QUrl &url, replyCallBack rcb, enum QUERYTYPE queryType);
     void get2(const QUrl &url, replyCallBack rcb);
     void get2(const QUrl &url, replyCallBack rcb, QList<std::pair<QString, QString>> &headers);
     void anyGet(const QUrl &url, replyCallBack rcb);
@@ -101,7 +109,9 @@ public:
     void queryTicketReply(QNetworkReply *reply);
     void queryDiffDateTicket(const QString &date);
     void queryDiffDateTicketReply(QNetworkReply *reply);
-    void queryTrainStopStation(const QList<QString> &args);
+    void queryStationTicket(const QString &staFromCode, const QString &staToCode);
+    void queryStationTicketReply(QNetworkReply *reply);
+    void queryTrainStopStation(const QList<QString> &args, enum QUERYTYPE queryType);
     void queryTrainStopStationReply(QNetworkReply *reply);
     void passportUamtk();
     void passportUamtkReply(QNetworkReply *reply);
@@ -267,6 +277,7 @@ public:
     QVariantMap payForm;
 
     QList<std::pair<QTemporaryFile *, int>> tempFilesList;
+    MidTrainQuery midTrain;
 };
 
 

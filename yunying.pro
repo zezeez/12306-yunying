@@ -47,6 +47,7 @@ SOURCES += \
     src/logindialog.cpp \
         src/main.cpp \
         src/mainwindow.cpp \
+    src/midstation.cpp \
     src/passengerdialog.cpp \
     src/seatdialog.cpp \
     src/seattypedialog.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     include/loginconf.h \
     include/logindialog.h \
         include/mainwindow.h \
+    include/midstation.h \
     include/nethelper.h \
     include/passengerdialog.h \
     include/seatdialog.h \
@@ -113,6 +115,8 @@ RESOURCES += \
     resource.qrc
 
 DISTFILES += \
+    LICENSE \
+    README.md \
     main.qss
 
 RC_ICONS = images/ticket.ico
@@ -127,5 +131,7 @@ unix:!macx {
         LIBS += -lasan
     }
 }
+
+include(lib/qt-notify/qtnotify.pri)
 
 

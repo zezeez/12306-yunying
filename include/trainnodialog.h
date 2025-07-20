@@ -6,6 +6,7 @@
 #include <QListWidget>
 #include <QPushButton>
 #include <QSet>
+#include <QMap>
 #include "doublelistwidget.h"
 
 class TrainNoDialog : public QDialog
@@ -17,7 +18,7 @@ public:
     void setUp();
     void updateSelectedTips(int leftCount, int rightCount);
     bool hasTrain(const QString &trainInfo);
-    void addTrain(const QString &trainInfo);
+    void addTrain(const QString &trainInfo, const QString &trainNo);
     void addTrainFinish();
     void addSelectedTrain(const QString &trainInfo);
     void removeSelectedTrain(const QString &trainInfo);
@@ -27,6 +28,7 @@ public:
     const QList<QString> &getSelectedTrainList() const;
     const QSet<QString> &getSelectedTrainSet() const;
     const QSet<QString> &getAllTrainSet() const;
+    const QMap<QString, QString> &getTrainNoMap() const;
     void setSelectedTrainNo();
     void setUnselectedTrainNo();
     void moveUpTrain();
@@ -37,6 +39,7 @@ public:
 public:
     QSet<QString> trainSet;
     QSet<QString> selectedTrainSet;
+    QMap<QString, QString> trainNoMap;
     DoubleListWidget *dListWidget;
 };
 

@@ -415,6 +415,18 @@ void SettingDialog::grabTicketSetting(QTabWidget *tab)
     hlayout->addWidget(label);
     hlayout->addStretch();
     vlayout1->addLayout(hlayout);
+
+    cb = new QCheckBox(tr("无票时自动查询沿途车站"));
+    cb->setToolTip(tr("中间车站有票时则提示"));
+    connect(cb, &QCheckBox::toggled, this, [] (bool checked) {
+        UserData::instance()->grabSetting.queryMidStation = checked;
+        QSettings setting;
+        setting.setValue(_("grab_setting/query_mid_station"), checked);
+    });
+    checked = setting.value(_("grab_setting/query_mid_station"), false).value<bool>();
+    cb->setChecked(checked);
+    vlayout1->addWidget(cb);
+
     hlayout1->addLayout(vlayout1);
     vlayout1 = new QVBoxLayout;
     hlayout = new QHBoxLayout;

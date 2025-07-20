@@ -262,11 +262,12 @@ bool TrainNoDialog::hasTrain(const QString &trainInfo)
     return trainSet.contains(trainInfo);
 }
 
-void TrainNoDialog::addTrain(const QString &trainInfo)
+void TrainNoDialog::addTrain(const QString &trainInfo, const QString &trainNo)
 {
     if (!hasTrain(trainInfo)) {
         dListWidget->addLeftItem(trainInfo, Qt::MatchStartsWith);
         trainSet.insert(trainInfo);
+        trainNoMap.insert(trainInfo.split(' ')[0], trainNo);
     }
 }
 
@@ -305,6 +306,7 @@ void TrainNoDialog::clearUnSelectedTrain()
 {
     dListWidget->clearLeftList();
     trainSet.clear();
+    trainNoMap.clear();
 }
 
 const QList<QString> &TrainNoDialog::getSelectedTrainList() const
@@ -338,6 +340,11 @@ const QSet<QString> &TrainNoDialog::getSelectedTrainSet() const
 const QSet<QString> &TrainNoDialog::getAllTrainSet() const
 {
     return trainSet;
+}
+
+const QMap<QString, QString> &TrainNoDialog::getTrainNoMap() const
+{
+    return trainNoMap;
 }
 
 void TrainNoDialog::enterGrabTicketMode()

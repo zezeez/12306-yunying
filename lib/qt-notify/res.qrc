@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/train_icon.png</file>
+        <file>img/close.svg</file>
+    </qresource>
+</RCC>
