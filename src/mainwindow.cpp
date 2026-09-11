@@ -657,6 +657,7 @@ void MainWindow::updateTableView(QVector<QStringList> allTrain, QVariantMap stat
             model->setData(model->index(itemIdx, ETRAINNOCOL), curText, Qt::ToolTipRole);
             model->setData(model->index(itemIdx, ETRAINNOCOL), blue, Qt::ForegroundRole);
             model->setData(model->index(itemIdx, ETRAINNOCOL), trainInfo[ETRAINNO], Qt::UserRole);
+            model->setData(model->index(itemIdx, ETRAINNOCOL), Qt::AlignCenter, Qt::TextAlignmentRole);
         }
 
         if (model->data(model->index(itemIdx, EFROMSTATIONCOL), Qt::DisplayRole).value<QString>() != fromStationName) {
@@ -845,6 +846,8 @@ void MainWindow::updateTableView(QVector<QStringList> allTrain, QVariantMap stat
     trainNoDialog->addTrainFinish();
     // 列车运行图调整的列车
     int invalidTrainSize = invalidTrain.size();
+    const QBrush black = QBrush(QColor(00, 00, 00));
+
     for (i = 0; i < invalidTrainSize; i++) {
         QStringList &trainInfo = invalidTrain[i];
         QString curText = trainInfo[ESTATIONTRAINCODE].isEmpty() ?
@@ -856,9 +859,9 @@ void MainWindow::updateTableView(QVector<QStringList> allTrain, QVariantMap stat
         }
 
         fromStationName = stationMap.value(trainInfo[EFROMSTATIONTELECODE]).toString();
-        if (model->data(model->index(itemIdx, EFROMSTATIONCOL), Qt::DisplayRole).value<QString>() != toStationName) {
-            model->setData(model->index(itemIdx, EFROMSTATIONCOL), toStationName, Qt::DisplayRole);
-            model->setData(model->index(itemIdx, EFROMSTATIONCOL), toStationName, Qt::ToolTipRole);
+        if (model->data(model->index(itemIdx, EFROMSTATIONCOL), Qt::DisplayRole).value<QString>() != fromStationName) {
+            model->setData(model->index(itemIdx, EFROMSTATIONCOL), fromStationName, Qt::DisplayRole);
+            model->setData(model->index(itemIdx, EFROMSTATIONCOL), fromStationName, Qt::ToolTipRole);
         }
 
         toStationName = stationMap.value(trainInfo[ETOSTATIONTELECODE]).toString();
@@ -870,6 +873,7 @@ void MainWindow::updateTableView(QVector<QStringList> allTrain, QVariantMap stat
         for (int k = ESTARTTIMECOL; k < EREMARKCOL; k++) {
             model->setData(model->index(itemIdx, k), _("--"), Qt::DisplayRole);
             model->setData(model->index(itemIdx, k), Qt::AlignCenter, Qt::TextAlignmentRole);
+            model->setData(model->index(itemIdx, k), black, Qt::ForegroundRole);
         }
         QPushButton *button = dynamic_cast<QPushButton *>(tableView->indexWidget(model->index(itemIdx, EREMARKCOL)));
         if (button) {

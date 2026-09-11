@@ -42,7 +42,7 @@
 ##### 方法1 直接下载
 2. 目前有两个网站用于发布已编译的安装包，其中Windows为便携版本，无需安装
    * [https://zezeez.github.io](https://zezeez.github.io)
-   * [https://op9.top](https://op9.top)
+   * [https://cdn1.lanzout.com/i2w4r2ts9y7a](https://cdn1.lanzout.com/i2w4r2ts9y7a)
 
 从上述网站中下载安装包，优点是简单、开箱即用
 
@@ -76,6 +76,4 @@
 ## 许可证
 ### [GPL V3](LICENSE)
 如果您自行发布了本软件、发布了本软件的修改版本或您的软件中包含了本软件的组件，请确保您的许可证是与`GPL V3`是相兼容的
-
-#### [关于抢票/候补的一点思考](LittleSummary.md)
 
